@@ -1503,12 +1503,12 @@
     const grid = document.getElementById('teamCardGrid');
     if (!grid) return;
 
-    // filteredData에서 상담원별 집계
+    // filteredData에서 상담원별 집계 (건수 = 아웃콜만)
     const agentMap = {};
     filteredData.forEach(r => {
       if (!r.agent) return;
       if (!agentMap[r.agent]) agentMap[r.agent] = { total: 0, totalSec: 0, dept: r.dept };
-      agentMap[r.agent].total++;
+      if (r.type === 'out') agentMap[r.agent].total++;
       agentMap[r.agent].totalSec += r.durationSec;
     });
 
@@ -1610,12 +1610,12 @@
     const now = new Date();
     const stamp = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
-    // 상담원별 집계
+    // 상담원별 집계 (건수 = 아웃콜만)
     const agentMap = {};
     filteredData.forEach(r => {
       if (!r.agent) return;
       if (!agentMap[r.agent]) agentMap[r.agent] = { total: 0, totalSec: 0 };
-      agentMap[r.agent].total++;
+      if (r.type === 'out') agentMap[r.agent].total++;
       agentMap[r.agent].totalSec += r.durationSec;
     });
 
