@@ -1496,8 +1496,7 @@
     { id: 't3-2', name: 'BM3-2팀', members: ['강태욱','하강우','오경진','강민정'] },
   ];
 
-  // 팀 카드 메모 저장소
-  window._teamMemoMap = window._teamMemoMap || {};
+  // 팀 카드 메모 저장소 (localStorage에서 로드됨)
 
   function renderTeamCards() {
     const grid = document.getElementById('teamCardGrid');
@@ -1555,6 +1554,7 @@
 
   function saveTeamMemo(key, val) {
     window._teamMemoMap[key] = val;
+    persistTeamMemoMap();
   }
 
   // ── 팀원 편집 모달 ──
@@ -1703,11 +1703,29 @@
     });
   }
 
-  // 메모 저장소 (agentName → 메모 문자열)
-  window._memoMap = window._memoMap || {};
+  // ── 메모 저장소 (localStorage 기반) ──
+  const MEMO_KEY      = 'ca_memo_agent';
+  const TEAM_MEMO_KEY = 'ca_memo_team';
+
+  function loadMemoMap() {
+    try { return JSON.parse(localStorage.getItem(MEMO_KEY) || '{}'); } catch { return {}; }
+  }
+  function loadTeamMemoMap() {
+    try { return JSON.parse(localStorage.getItem(TEAM_MEMO_KEY) || '{}'); } catch { return {}; }
+  }
+  function persistMemoMap() {
+    try { localStorage.setItem(MEMO_KEY, JSON.stringify(window._memoMap)); } catch {}
+  }
+  function persistTeamMemoMap() {
+    try { localStorage.setItem(TEAM_MEMO_KEY, JSON.stringify(window._teamMemoMap)); } catch {}
+  }
+
+  window._memoMap     = loadMemoMap();
+  window._teamMemoMap = loadTeamMemoMap();
 
   function saveMemo(agent, val) {
     window._memoMap[agent] = val;
+    persistMemoMap();
   }
 
   function renderAgentSummary() {
