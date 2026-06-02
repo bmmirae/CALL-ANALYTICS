@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>녹취 통화 분석기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  /* ── LIGHT (default) ── */
+  :root {
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --surface2: #f0f2f5;
+    --border: #dde1e8;
+    --accent: #00a884;
+    --accent2: #2563eb;
+    --accent3: #d97706;
+    --text: #1a202c;
+    --text-sub: #64748b;
+    --in-color: #2563eb;
+    --out-color: #059669;
+    --shadow: 0 1px 4px rgba(0,0,0,0.08);
+    --header-bg: #ffffff;
+    --toggle-bg: #e2e8f0;
+    --toggle-knob: #ffffff;
+    --toggle-icon: '🌙';
+  }
+
+  /* ── DARK ── */
+  [data-theme="dark"] {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --accent: #00d4aa;
+    --accent2: #3b82f6;
+    --accent3: #f59e0b;
+    --text: #e6edf3;
+    --text-sub: #8b949e;
+    --in-color: #3b82f6;
+    --out-color: #10b981;
+    --shadow: 0 1px 4px rgba(0,0,0,0.4);
+    --header-bg: #161b22;
+    --toggle-bg: #00d4aa;
+    --toggle-knob: #0d1117;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    transition: background 0.25s, color 0.25s;
+  }
+
+  header {
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+    transition: background 0.25s, border-color 0.25s;
+  }
+
+  header .logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  header .sub {
+    font-size: 12px;
+    color: var(--text-sub);
+  }
+
+  header .spacer { flex: 1; }
+
+  /* ── Theme toggle ── */
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .theme-toggle .t-label {
+    font-size: 12px;
+    color: var(--text-sub);
+    font-weight: 500;
+  }
+
+  .toggle-track {
+    width: 40px;
+    height: 22px;
+    border-radius: 11px;
+    background: var(--toggle-bg);
+    position: relative;
+    transition: background 0.25s;
+    cursor: pointer;
+    border: 1px solid var(--border);
+  }
+
+  .toggle-knob {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--toggle-knob);
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.25s, background 0.25s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+  }
+
+  [data-theme="dark"] .toggle-knob {
+    transform: translateX(18px);
+  }
+
+  .theme-icon {
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  .main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 28px;
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--surface);
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(0,168,132,0.04);
+  }
+
+  [data-theme="dark"] .upload-zone:hover,
+  [data-theme="dark"] .upload-zone.drag-over {
+    background: rgba(0,212,170,0.05);
+  }
+
+  .upload-zone .icon { font-size: 40px; margin-bottom: 12px; }
+  .upload-zone h3 { font-size: 16px; margin-bottom: 6px; color: var(--text); }
+  .upload-zone p  { font-size: 13px; color: var(--text-sub); }
+  .upload-zone input { display: none; }
+
+  .file-loaded {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,168,132,0.1);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    margin-top: 10px;
+  }
+
+  /* Filter panel */
+  .filter-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    display: none;
+    box-shadow: var(--shadow);
+    transition: background 0.25s, border-color 0.25s;
+  }
+
+  .filter-panel.visible { display: block; }
+
+  .filter-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-sub);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: flex-end;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .filter-group label {
+    font-size: 11px;
+    color: var(--text-sub);
+    font-weight: 600;
+    letter-spacing: 0.4px;
+  }
+
+  .filter-group input,
+  .filter-group select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: 'Noto Sans KR', sans-serif;
+    outline: none;
+    transition: border-color 0.2s, background 0.25s;
+    min-width: 140px;
+  }
+
+  .filter-group input:focus,
+  .filter-group select:focus { border-color: var(--accent); }
+
+  .filter-group input[type="time"] { min-width: 110px; }
+
+  .btn {
+    padding: 9px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { filter: brightness(1.1); }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-sub);
+  }
+
+  .btn-ghost:hover { border-color: var(--text-sub); color: var(--text); }
+
+  /* Type toggle */
+  .type-toggle { display: flex; gap: 6px; }
+
+  .type-btn {
+    padding: 7px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-sub);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+
+  .type-btn.active-all { background: rgba(217,119,6,0.12); border-color: var(--accent3); color: var(--accent3); }
+  .type-btn.active-in  { background: rgba(37,99,235,0.12);  border-color: var(--in-color); color: var(--in-color); }
+  .type-btn.active-out { background: rgba(5,150,105,0.12);  border-color: var(--out-color); color: var(--out-color); }
+
+  [data-theme="dark"] .type-btn.active-all { background: rgba(245,158,11,0.15); }
+  [data-theme="dark"] .type-btn.active-in  { background: rgba(59,130,246,0.15); }
+  [data-theme="dark"] .type-btn.active-out { background: rgba(16,185,129,0.15); }
+
+  /* Stats bar */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    box-shadow: var(--shadow);
+    transition: background 0.25s, border-color 0.25s;
+  }
+
+  .stat-card .label {
+    font-size: 11px;
+    color: var(--text-sub);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+  }
+
+  .stat-card .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .stat-card .value.green { color: var(--accent); }
+  .stat-card .value.blue  { color: var(--accent2); }
+  .stat-card .value.amber { color: var(--accent3); }
+
+  /* Table */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: background 0.25s, border-color 0.25s;
+  }
+
+  .table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table-header h2 { font-size: 14px; font-weight: 700; }
+
+  .row-count {
+    font-size: 12px;
+    color: var(--text-sub);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .table-scroll { overflow-x: auto; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+  thead th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-sub);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.25s;
+  }
+
+  thead th:hover { color: var(--text); }
+  thead th .sort-icon { margin-left: 4px; opacity: 0.4; }
+  thead th.sorted .sort-icon { opacity: 1; color: var(--accent); }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+
+  [data-theme="light"] tbody tr { border-bottom-color: #eef0f4; }
+
+  tbody tr:hover { background: rgba(0,0,0,0.025); }
+  [data-theme="dark"] tbody tr:hover { background: rgba(255,255,255,0.03); }
+  tbody tr:last-child { border-bottom: none; }
+
+  td { padding: 10px 14px; white-space: nowrap; color: var(--text); }
+
+  td.mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-sub);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .badge-in  { background: rgba(37,99,235,0.12); color: var(--in-color); }
+  .badge-out { background: rgba(5,150,105,0.12); color: var(--out-color); }
+  [data-theme="dark"] .badge-in  { background: rgba(59,130,246,0.15); }
+  [data-theme="dark"] .badge-out { background: rgba(16,185,129,0.15); }
+
+  .duration-bar-wrap { display: flex; align-items: center; gap: 8px; }
+
+  .duration-bar { height: 4px; border-radius: 2px; min-width: 2px; }
+
+  /* Agent summary */
+  .agent-section {
+    margin-top: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: background 0.25s, border-color 0.25s;
+  }
+
+  .section-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-header h2 { font-size: 14px; font-weight: 700; }
+
+  .agent-table-wrap { overflow-x: auto; }
+
+  .agent-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+  .agent-table thead th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-sub);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .agent-table tbody td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  [data-theme="light"] .agent-table tbody td { border-bottom-color: #eef0f4; }
+  .agent-table tbody tr:last-child td { border-bottom: none; }
+  .agent-table tbody tr:hover { background: rgba(0,0,0,0.025); }
+  [data-theme="dark"] .agent-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+
+  .agent-name { font-weight: 600; }
+
+  .mini-bar-wrap { display: flex; align-items: center; gap: 6px; }
+  .mini-bar { height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+
+  /* Pagination */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .page-btn {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-sub);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .page-btn:hover, .page-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .page-info {
+    font-size: 12px;
+    color: var(--text-sub);
+    font-family: 'JetBrains Mono', monospace;
+    min-width: 80px;
+    text-align: center;
+  }
+
+  /* ── Memo input ── */
+  .memo-input {
+    width: 100%;
+    min-width: 120px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 5px 8px;
+    font-size: 12px;
+    font-family: 'Noto Sans KR', sans-serif;
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.4;
+  }
+  .memo-input:focus { border-color: var(--accent); }
+
+  /* ── PDF button ── */
+  .btn-pdf {
+    background: #e53e3e;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: filter 0.15s;
+  }
+  .btn-pdf:hover { filter: brightness(1.1); }
+
+  /* ── File tag list ── */
+  .file-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+    justify-content: center;
+  }
+
+  .file-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 5px 10px 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .file-tag .tag-remove {
+    cursor: pointer;
+    color: var(--text-sub);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0 2px;
+    border-radius: 50%;
+    transition: color 0.15s, background 0.15s;
+  }
+
+  .file-tag .tag-remove:hover { color: var(--danger); }
+
+  .file-tag .tag-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .upload-zone .hint {
+    font-size: 11px;
+    color: var(--text-sub);
+    margin-top: 6px;
+  }
+
+  /* ── 본부 필터 체크박스 ── */
+  .hq-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .hq-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+    color: var(--text-sub);
+  }
+
+  .hq-chip input { display: none; }
+
+  .hq-chip.checked {
+    background: rgba(0,168,132,0.12);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  [data-theme="dark"] .hq-chip.checked {
+    background: rgba(0,212,170,0.15);
+  }
+
+  /* ── Collapsible ── */
+  .collapse-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+
+  .collapse-header:hover { background: var(--surface2); }
+
+  .collapse-header h2 { font-size: 14px; font-weight: 700; }
+
+  .collapse-header .ch-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .collapse-toggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--text-sub);
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    transition: all 0.15s;
+  }
+
+  .collapse-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+  .chevron {
+    font-size: 11px;
+    transition: transform 0.25s;
+    display: inline-block;
+  }
+
+  .chevron.open { transform: rotate(180deg); }
+
+  .collapsible-body {
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.25s ease;
+    max-height: 0;
+    opacity: 0;
+  }
+
+  .collapsible-body.expanded {
+    max-height: 99999px;
+    opacity: 1;
+  }
+
+  /* ── Team Card Section ── */
+  .team-card-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    transition: background 0.25s, border-color 0.25s;
+  }
+
+  .team-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .team-card-header h2 { font-size: 14px; font-weight: 700; }
+
+  .team-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    padding: 16px 20px;
+  }
+
+  .team-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: background 0.25s;
+  }
+
+  .team-card-title {
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #fff;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .team-card-title.t2-1 { background: #2563eb; }
+  .team-card-title.t2-2 { background: #7c3aed; }
+  .team-card-title.t2-3 { background: #db2777; }
+  .team-card-title.t3-1 { background: #059669; }
+  .team-card-title.t3-2 { background: #d97706; }
+
+  .team-card table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .team-card thead th {
+    padding: 5px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-sub);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    text-align: center;
+    cursor: default;
+  }
+
+  .team-card thead th:first-child { text-align: left; }
+
+  .team-card tbody td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  [data-theme="light"] .team-card tbody td { border-bottom-color: #f1f5f9; }
+
+  .team-card tbody td:first-child { text-align: left; font-weight: 600; }
+  .team-card tbody tr:last-child td { border-bottom: none; }
+  .team-card tbody tr:hover { background: rgba(0,0,0,0.025); }
+  [data-theme="dark"] .team-card tbody tr:hover { background: rgba(255,255,255,0.04); }
+
+  .team-card .memo-input { min-width: 80px; font-size: 11px; }
+
+  .team-card-footer {
+    padding: 6px 12px;
+    font-size: 11px;
+    color: var(--text-sub);
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    gap: 12px;
+  }
+
+  .team-card-footer span strong { color: var(--text); }
+
+  /* 팀원 편집 모달 */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    width: 520px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+
+  .modal-box h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+
+  .modal-team-block { margin-bottom: 14px; }
+  .modal-team-block label {
+    font-size: 11px; font-weight: 700; color: var(--text-sub);
+    text-transform: uppercase; letter-spacing: 0.8px;
+    display: block; margin-bottom: 5px;
+  }
+  .modal-team-block textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 8px 10px;
+    font-size: 12px;
+    font-family: 'Noto Sans KR', sans-serif;
+    resize: vertical;
+    outline: none;
+    line-height: 1.6;
+    min-height: 80px;
+  }
+  .modal-team-block textarea:focus { border-color: var(--accent); }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+  @media (max-width: 768px) {
+    .main { padding: 16px; }
+    .filter-row { flex-direction: column; }
+    .stats-bar { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">CALL ANALYTICS</div>
+  <div class="sub">녹취 통화 분석 시스템</div>
+  <div class="spacer"></div>
+  <div class="theme-toggle" onclick="toggleTheme()" title="테마 변경">
+    <span class="theme-icon" id="themeIcon">🌙</span>
+    <div class="toggle-track">
+      <div class="toggle-knob"></div>
+    </div>
+    <span class="t-label" id="themeLabel">다크모드</span>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- Upload -->
+  <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+    <div class="icon">📊</div>
+    <h3>엑셀 파일을 업로드하세요</h3>
+    <p>통화내역 .xlsx 파일을 드래그하거나 클릭해서 선택</p>
+    <p class="hint">여러 파일을 한 번에 선택하면 합산 분석됩니다</p>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" multiple>
+    <div id="fileTagList" class="file-list"></div>
+  </div>
+
+  <!-- 본부 필터 -->
+  <div id="hqFilterWrap" style="display:none; margin-bottom:14px; padding:14px 20px; background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow);">
+    <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">🏢 본부 필터</div>
+    <div class="hq-filter" id="hqChips"></div>
+  </div>
+
+  <!-- Filter panel -->
+  <div class="filter-panel" id="filterPanel">
+    <div class="filter-title">🔍 필터 옵션</div>
+    <div class="filter-row">
+      <div class="filter-group">
+        <label>시작 날짜</label>
+        <input type="date" id="dateFrom">
+      </div>
+      <div class="filter-group">
+        <label>종료 날짜</label>
+        <input type="date" id="dateTo">
+      </div>
+      <div class="filter-group">
+        <label>시작 시간</label>
+        <input type="time" id="timeFrom" value="00:00">
+      </div>
+      <div class="filter-group">
+        <label>종료 시간</label>
+        <input type="time" id="timeTo" value="23:59">
+      </div>
+      <div class="filter-group">
+        <label>최소 통화시간 (초)</label>
+        <input type="number" id="minDuration" placeholder="예: 60" min="0" style="min-width:130px">
+      </div>
+      <div class="filter-group">
+        <label>유형 선택</label>
+        <div class="type-toggle">
+          <button class="type-btn active-all" data-type="all" onclick="setType('all')">전체</button>
+          <button class="type-btn" data-type="in"  onclick="setType('in')">인콜</button>
+          <button class="type-btn" data-type="out" onclick="setType('out')">아웃콜</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>상담원 검색</label>
+        <input type="text" id="agentSearch" placeholder="이름 입력..." style="min-width:130px">
+      </div>
+      <div class="filter-group">
+        <label>부서 선택</label>
+        <select id="deptFilter"><option value="">전체 부서</option></select>
+      </div>
+      <div class="filter-group" style="flex-direction:row; gap:8px; align-self:flex-end">
+        <button class="btn btn-primary" onclick="applyFilters()">적용</button>
+        <button class="btn btn-ghost" onclick="resetFilters()">초기화</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar" id="statsBar" style="display:none">
+    <div class="stat-card">
+      <div class="label">총 통화건수</div>
+      <div class="value" id="statTotal">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">인콜</div>
+      <div class="value blue" id="statIn">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">아웃콜</div>
+      <div class="value green" id="statOut">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">총 통화시간</div>
+      <div class="value amber" id="statDuration">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">평균 통화시간</div>
+      <div class="value" id="statAvg">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">상담원 수</div>
+      <div class="value" id="statAgents">0</div>
+    </div>
+  </div>
+
+  <!-- Agent summary (위로 이동) -->
+  <!-- 팀별 카드 섹션 -->
+  <div class="team-card-section" id="teamCardSection" style="display:none">
+    <div class="team-card-header">
+      <h2>📋 팀별 통화 현황</h2>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost" style="font-size:12px;padding:6px 14px;" onclick="openTeamEdit()">✏️ 팀원 편집</button>
+        <button class="btn-pdf" onclick="downloadTeamPDF()">📄 PDF 저장</button>
+      </div>
+    </div>
+    <div class="team-card-grid" id="teamCardGrid"></div>
+  </div>
+
+  <!-- 팀원 편집 모달 -->
+  <div class="modal-overlay" id="teamEditModal">
+    <div class="modal-box">
+      <h3>✏️ 팀원 편집</h3>
+      <p style="font-size:12px;color:var(--text-sub);margin-bottom:14px;">각 팀의 팀원 이름을 한 줄에 한 명씩 입력하세요.</p>
+      <div id="modalTeamBlocks"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeTeamEdit()">취소</button>
+        <button class="btn btn-primary" onclick="saveTeamEdit()">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="agent-section" id="agentSection" style="display:none">
+    <div class="collapse-header" onclick="toggleAgentSummary()" style="cursor:pointer;user-select:none;justify-content:space-between;display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);">
+      <h2>👤 인원별 통화 요약</h2>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="row-count" id="agentRowCount"></span>
+        <button class="btn-pdf" onclick="event.stopPropagation();downloadPDF()">📄 PDF 저장</button>
+        <span class="collapse-toggle" id="agentCollapseBtn">
+          <span class="chevron" id="agentChevron">▼</span>
+          <span id="agentCollapseLabel">펼치기</span>
+        </span>
+      </div>
+    </div>
+    <div class="collapsible-body" id="agentBody">
+    <div class="agent-table-wrap">
+      <table class="agent-table">
+        <thead>
+          <tr>
+            <th>상담원</th>
+            <th>부서</th>
+            <th>조회 건수</th>
+            <th>전체 통화수</th>
+            <th>인콜</th>
+            <th>아웃콜</th>
+            <th>총 통화시간</th>
+            <th>평균 통화시간</th>
+            <th>건수 비중</th>
+            <th style="min-width:150px">메모</th>
+          </tr>
+        </thead>
+        <tbody id="agentTableBody"></tbody>
+      </table>
+    </div>
+    </div><!-- /agentBody -->
+  </div>
+
+  <!-- Data table (접기/펼치기) -->
+  <div class="table-wrap" id="tableWrap" style="display:none; margin-top:20px">
+    <div class="collapse-header" onclick="toggleDetail()">
+      <h2>📋 통화 내역</h2>
+      <div class="ch-right">
+        <span class="row-count" id="rowCount">0건</span>
+        <span class="collapse-toggle">
+          <span class="chevron" id="chevron">▼</span>
+          <span id="collapseLabel">펼치기</span>
+        </span>
+      </div>
+    </div>
+    <div class="collapsible-body" id="detailBody">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortTable('date')">날짜/시간 <span class="sort-icon" id="sort-date">↕</span></th>
+              <th>부서명</th>
+              <th>상담원</th>
+              <th>내선번호</th>
+              <th>고객전화번호</th>
+              <th onclick="sortTable('duration')">통화시간 <span class="sort-icon" id="sort-duration">↕</span></th>
+              <th>유형</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+  // ── Collapsible detail ──
+  let detailOpen = false;
+  let agentOpen  = false;
+
+  function toggleAgentSummary() {
+    agentOpen = !agentOpen;
+    document.getElementById('agentBody').classList.toggle('expanded', agentOpen);
+    document.getElementById('agentChevron').classList.toggle('open', agentOpen);
+    document.getElementById('agentCollapseLabel').textContent = agentOpen ? '접기' : '펼치기';
+  }
+
+  function toggleDetail() {
+    detailOpen = !detailOpen;
+    const body    = document.getElementById('detailBody');
+    const chevron = document.getElementById('chevron');
+    const label   = document.getElementById('collapseLabel');
+    body.classList.toggle('expanded', detailOpen);
+    chevron.classList.toggle('open', detailOpen);
+    label.textContent = detailOpen ? '접기' : '펼치기';
+  }
+
+  // ── Theme ──
+  function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    document.getElementById('themeIcon').textContent  = isDark ? '🌙' : '☀️';
+    document.getElementById('themeLabel').textContent = isDark ? '다크모드' : '라이트모드';
+    localStorage.setItem('ca-theme', isDark ? 'light' : 'dark');
+  }
+
+  // Restore saved theme
+  (function() {
+    const saved = localStorage.getItem('ca-theme');
+    if (saved === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('themeIcon').textContent  = '☀️';
+        document.getElementById('themeLabel').textContent = '라이트모드';
+      });
+    }
+  })();
+
+  // ── Data ──
+  let rawData = [];
+  let filteredData = [];
+  let currentType = 'all';
+  let currentSort = { col: 'date', dir: 'desc' };
+  let currentPage = 1;
+  const PAGE_SIZE = 50;
+  let maxDurationSec = 0;
+  let loadedFiles = [];       // { name, count } 업로드된 파일 목록
+  let selectedHqs = new Set(); // 선택된 본부 필터
+
+  // Drag & Drop
+  const uploadZone = document.getElementById('uploadZone');
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault(); uploadZone.classList.remove('drag-over');
+    if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+  });
+
+  document.getElementById('fileInput').addEventListener('change', e => {
+    if (e.target.files.length) handleFiles(e.target.files);
+    e.target.value = ''; // 같은 파일 재선택 허용
+  });
+
+  function handleFiles(fileList) {
+    const files = Array.from(fileList);
+    let pending = files.length;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const wb = XLSX.read(e.target.result, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        const added = parseAndAppend(rows, file.name);
+        loadedFiles.push({ name: file.name, count: added });
+        pending--;
+        if (pending === 0) finalizeLoad();
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  function removeFile(fileName) {
+    rawData = rawData.filter(r => r._src !== fileName);
+    loadedFiles = loadedFiles.filter(f => f.name !== fileName);
+    finalizeLoad();
+  }
+
+  function renderFileTags() {
+    const wrap = document.getElementById('fileTagList');
+    if (loadedFiles.length === 0) { wrap.innerHTML = ''; return; }
+    wrap.innerHTML = loadedFiles.map(f =>
+      `<span class="file-tag">
+        <span class="tag-dot"></span>
+        ${f.name} <span style="color:var(--text-sub);font-weight:400">(${f.count}건)</span>
+        <span class="tag-remove" onclick="removeFile('${f.name.replace(/'/g,"\'")}')">✕</span>
+      </span>`
+    ).join('');
+  }
+
+  function finalizeLoad() {
+    renderFileTags();
+    // 본부 자동 감지 (정규화된 dept 기준)
+    const hqSet = new Set();
+    rawData.forEach(r => {
+      // "BM2-1팀" → "BM2본부", "BM3-2팀" → "BM3본부"
+      const m = r.dept.match(/^(BM\d+)/i);
+      r._hq = m ? m[1].toUpperCase() + '본부' : r.dept.split('-')[0] + '본부';
+      hqSet.add(r._hq);
+    });
+    const allHqs = [...hqSet].sort();
+    // 처음 로드 시 모두 선택
+    if (selectedHqs.size === 0) allHqs.forEach(h => selectedHqs.add(h));
+    // 새 본부 추가 시 자동 선택
+    allHqs.forEach(h => { if (!document.getElementById('hq_' + h)) selectedHqs.add(h); });
+
+    renderHqChips(allHqs);
+    document.getElementById('hqFilterWrap').style.display = allHqs.length > 0 ? '' : 'none';
+
+
+
+    // 날짜 범위 초기화
+    const dates = rawData.map(r => r.date.split(' ')[0]).filter(Boolean).sort();
+    if (dates.length) {
+      document.getElementById('dateFrom').value = dates[0];
+      document.getElementById('dateTo').value = dates[dates.length - 1];
+    }
+
+    // 부서 드롭다운 갱신
+    const depts = [...new Set(rawData.map(r => r.dept).filter(Boolean))].sort();
+    const deptSel = document.getElementById('deptFilter');
+    deptSel.innerHTML = '<option value="">전체 부서</option>';
+    depts.forEach(d => { const o = document.createElement('option'); o.value = d; o.textContent = d; deptSel.appendChild(o); });
+
+    document.getElementById('filterPanel').classList.add('visible');
+    if (rawData.length > 0) applyFilters();
+  }
+
+  function renderHqChips(allHqs) {
+    const wrap = document.getElementById('hqChips');
+    wrap.innerHTML = allHqs.map(h =>
+      `<label class="hq-chip ${selectedHqs.has(h) ? 'checked' : ''}" id="hq_${h}">
+        <input type="checkbox" ${selectedHqs.has(h) ? 'checked' : ''} onchange="toggleHq('${h}', this.checked)">
+        ${h}
+      </label>`
+    ).join('');
+  }
+
+  function toggleHq(hq, checked) {
+    if (checked) selectedHqs.add(hq);
+    else selectedHqs.delete(hq);
+    document.getElementById('hq_' + hq)?.classList.toggle('checked', checked);
+    applyFilters();
+  }
+
+  // ── 부서명 정규화: 소문자/공백 → 대문자+하이픈 형식 ──
+  // "bm2 2팀" → "BM2-2팀",  "BM3-1팀" → "BM3-1팀"
+  function normalizeDept(raw) {
+    const s = String(raw || '').trim();
+    // 이미 정규화된 형태: BM2-1팀, BM3-2팀
+    if (/^BM\d+-\d+팀$/i.test(s)) return s.toUpperCase().replace('팀','팀');
+    // "bm2 2팀" / "bm2-2팀" / "bm22팀" 등
+    const m = s.match(/bm\s*(\d+)\s*[-\s]?\s*(\d+)\s*팀/i);
+    if (m) return `BM${m[1]}-${m[2]}팀`;
+    // "bm2 팀" 처럼 팀번호 없는 경우
+    const m2 = s.match(/bm\s*(\d+)/i);
+    if (m2) return `BM${m2[1]}팀`;
+    return s; // 그 외는 원본 유지
+  }
+
+  // ── 날짜 정규화: Date객체 / 문자열 → "YYYY-MM-DD HH:MM" ──
+  function normalizeDate(raw) {
+    if (!raw) return '';
+    const s = String(raw).trim();
+    // xlsx가 Date 직렬화한 숫자 문자열 (예: "45000" → 엑셀 날짜 시리얼)
+    // SheetJS는 보통 이미 문자열로 변환해주므로 문자열 처리 위주
+    // 형식1: "2026-06-02 16:14" → 그대로
+    if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(s)) return s.slice(0, 16);
+    // 형식2: JS Date toString 계열 (SheetJS raw:false 시 나올 수 있음)
+    // 형식3: "2026-06-02T16:14:00.000Z"
+    if (/^\d{4}-\d{2}-\d{2}T/.test(s)) {
+      const d = new Date(s);
+      if (!isNaN(d)) {
+        const pad = n => String(n).padStart(2,'0');
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      }
+    }
+    return s.slice(0, 16);
+  }
+
+  // ── 통화시간 정규화: 숫자(초) / "MM:SS" / "HH:MM:SS" → 초(숫자) ──
+  function normalizeDuration(raw) {
+    if (raw === null || raw === undefined || raw === '') return 0;
+    const s = String(raw).trim();
+    // 숫자만: 초
+    if (/^\d+$/.test(s)) return parseInt(s);
+    // HH:MM:SS 또는 MM:SS
+    if (s.includes(':')) {
+      const parts = s.split(':').map(Number);
+      if (parts.length === 3) return parts[0]*3600 + parts[1]*60 + parts[2];
+      if (parts.length === 2) return parts[0]*60 + parts[1];
+    }
+    return parseInt(s) || 0;
+  }
+
+  function parseAndAppend(rows, srcName) {
+    // 헤더 행 찾기 (최대 5행 탐색)
+    let headerIdx = -1;
+    for (let i = 0; i < Math.min(5, rows.length); i++) {
+      const r = rows[i].map(c => String(c || '').trim());
+      if (r.some(c => c.includes('날짜') || c.includes('상담원'))) { headerIdx = i; break; }
+    }
+    if (headerIdx === -1) return 0;
+
+    const headers = rows[headerIdx].map(h => String(h || '').trim());
+    const colMap = {};
+    headers.forEach((h, i) => {
+      if (h.includes('날짜'))                               colMap.date = i;
+      else if (h.includes('부서'))                          colMap.dept = i;
+      else if (h.includes('상담원'))                        colMap.agent = i;
+      else if (h.includes('내선'))                          colMap.ext = i;
+      else if (h.includes('고객명'))                        colMap.custName = i;
+      else if (h.includes('고객전화') || h.includes('전화번호')) colMap.phone = i;
+      else if (h.includes('통화시간'))                      colMap.duration = i;
+      else if (h.includes('유형'))                          colMap.type = i;
+    });
+
+    let added = 0;
+    for (let i = headerIdx + 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || row.every(c => c === null || c === undefined || c === '')) continue;
+
+      const rawDept = row[colMap.dept];
+      if (!rawDept) continue;
+      const deptVal  = normalizeDept(rawDept);   // 정규화된 부서명
+
+      const rawDate  = row[colMap.date];
+      const dateVal  = normalizeDate(rawDate);    // 정규화된 날짜
+      if (!dateVal) continue;
+
+      const rawDur   = row[colMap.duration];
+      const durSec   = normalizeDuration(rawDur); // 정규화된 통화시간(초)
+
+      const typeRaw  = String(row[colMap.type] || '').trim().toLowerCase();
+
+      rawData.push({
+        date:      dateVal,
+        dept:      deptVal,
+        agent:     String(row[colMap.agent]   || '').trim(),
+        ext:       String(row[colMap.ext]     || '').trim(),
+        custName:  String(row[colMap.custName]|| '').trim(),
+        phone:     String(row[colMap.phone]   || '').trim(),
+        durationRaw: String(rawDur || ''),
+        durationSec: durSec,
+        type:      typeRaw,
+        _src:      srcName,
+      });
+      added++;
+    }
+    return added;
+  }
+
+  // parseDuration: normalizeDuration의 alias (호환성 유지)
+  function parseDuration(str) { return normalizeDuration(str); }
+
+  function formatDuration(sec) {
+    if (!sec) return '0초';
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    if (h > 0) return `${h}시간 ${m}분 ${s}초`;
+    if (m > 0) return `${m}분 ${s}초`;
+    return `${s}초`;
+  }
+
+  function setType(type) {
+    currentType = type;
+    document.querySelectorAll('.type-btn').forEach(b => {
+      b.className = 'type-btn';
+      if (b.dataset.type === type) b.classList.add(`active-${type}`);
+    });
+  }
+
+  function applyFilters() {
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo   = document.getElementById('dateTo').value;
+    const timeFrom = document.getElementById('timeFrom').value || '00:00';
+    const timeTo   = document.getElementById('timeTo').value || '23:59';
+    const minDur   = parseInt(document.getElementById('minDuration').value) || 0;
+    const agentQ   = document.getElementById('agentSearch').value.trim().toLowerCase();
+    const dept     = document.getElementById('deptFilter').value;
+
+    // 날짜 범위만 적용한 전체 건수 — 시간대(timeFrom/timeTo) 필터 미적용
+    // 상담원/부서/최소통화시간은 동일하게 적용, 유형(in/out)도 무시
+    const dateOnlyData = rawData.filter(r => {
+      const [rDate] = r.date.split(' ');
+      if (dateFrom && rDate < dateFrom) return false;
+      if (dateTo   && rDate > dateTo)   return false;
+      // 시간대 필터 제외 (전체 통화수이므로)
+      if (agentQ && !r.agent.toLowerCase().includes(agentQ)) return false;
+      if (dept && r.dept !== dept) return false;
+      if (selectedHqs.size > 0 && !selectedHqs.has(r._hq)) return false;
+      return true;
+    });
+    // agent별 날짜 범위 전체 건수 맵 (시간·유형 무관)
+    window._agentTotalMap = {};
+    dateOnlyData.forEach(r => {
+      if (!r.agent) return;
+      window._agentTotalMap[r.agent] = (window._agentTotalMap[r.agent] || 0) + 1;
+    });
+
+    filteredData = rawData.filter(r => {
+      const [rDate, rTime] = r.date.split(' ');
+      const rTimeTrim = (rTime || '00:00').slice(0, 5);
+      if (dateFrom && rDate < dateFrom) return false;
+      if (dateTo   && rDate > dateTo)   return false;
+      if (rTimeTrim < timeFrom || rTimeTrim > timeTo) return false;
+      if (r.durationSec < minDur) return false;
+      if (currentType !== 'all' && r.type !== currentType) return false;
+      if (agentQ && !r.agent.toLowerCase().includes(agentQ)) return false;
+      if (dept && r.dept !== dept) return false;
+      // 본부 필터
+      if (selectedHqs.size > 0 && !selectedHqs.has(r._hq)) return false;
+      return true;
+    });
+
+    maxDurationSec = filteredData.length ? Math.max(...filteredData.map(r => r.durationSec)) : 0;
+    sortData(); currentPage = 1;
+    renderStats(); renderTable(); renderAgentSummary();
+
+    document.getElementById('statsBar').style.display = '';
+    document.getElementById('teamCardSection').style.display = '';
+    document.getElementById('tableWrap').style.display = '';
+    document.getElementById('agentSection').style.display = '';
+    renderTeamCards();
+  }
+
+  function resetFilters() {
+    const dates = rawData.map(r => r.date.split(' ')[0]).filter(Boolean).sort();
+    document.getElementById('dateFrom').value = dates[0] || '';
+    document.getElementById('dateTo').value   = dates[dates.length-1] || '';
+    document.getElementById('timeFrom').value = '00:00';
+    document.getElementById('timeTo').value   = '23:59';
+    document.getElementById('minDuration').value = '';
+    document.getElementById('agentSearch').value = '';
+    document.getElementById('deptFilter').value  = '';
+    setType('all');
+    applyFilters();
+  }
+
+  function sortTable(col) {
+    if (currentSort.col === col) currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+    else currentSort = { col, dir: 'desc' };
+    document.querySelectorAll('.sort-icon').forEach(el => el.textContent = '↕');
+    const icon = document.getElementById(`sort-${col}`);
+    if (icon) icon.textContent = currentSort.dir === 'asc' ? '↑' : '↓';
+    sortData(); currentPage = 1; renderTable();
+  }
+
+  function sortData() {
+    filteredData.sort((a, b) => {
+      let va, vb;
+      if (currentSort.col === 'date') { va = a.date; vb = b.date; }
+      else { va = a.durationSec; vb = b.durationSec; }
+      return currentSort.dir === 'asc' ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+    });
+  }
+
+  function renderStats() {
+    const inCalls  = filteredData.filter(r => r.type === 'in');
+    const outCalls = filteredData.filter(r => r.type === 'out');
+    const totalSec = filteredData.reduce((s, r) => s + r.durationSec, 0);
+    const agents   = new Set(filteredData.map(r => r.agent)).size;
+    document.getElementById('statTotal').textContent    = filteredData.length.toLocaleString();
+    document.getElementById('statIn').textContent       = inCalls.length.toLocaleString();
+    document.getElementById('statOut').textContent      = outCalls.length.toLocaleString();
+    document.getElementById('statDuration').textContent = formatDuration(totalSec);
+    document.getElementById('statAvg').textContent      = filteredData.length ? formatDuration(Math.round(totalSec / filteredData.length)) : '0초';
+    document.getElementById('statAgents').textContent   = agents;
+  }
+
+  function renderTable() {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const pageData = filteredData.slice(start, start + PAGE_SIZE);
+    const tbody = document.getElementById('tableBody');
+    document.getElementById('rowCount').textContent = `${filteredData.length.toLocaleString()}건`;
+
+    if (pageData.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-sub)">조건에 맞는 데이터가 없습니다</td></tr>`;
+    } else {
+      tbody.innerHTML = pageData.map(r => {
+        const barW = maxDurationSec ? Math.max(2, Math.round((r.durationSec / maxDurationSec) * 80)) : 2;
+        const barColor = r.type === 'in' ? 'var(--in-color)' : 'var(--accent)';
+        const badge = r.type === 'in'
+          ? `<span class="badge badge-in">인콜</span>`
+          : `<span class="badge badge-out">아웃콜</span>`;
+        return `<tr>
+          <td class="mono">${r.date}</td>
+          <td>${r.dept}</td>
+          <td><strong>${r.agent}</strong></td>
+          <td class="mono">${r.ext}</td>
+          <td class="mono">${r.phone}</td>
+          <td>
+            <div class="duration-bar-wrap">
+              <div class="duration-bar" style="width:${barW}px;background:${barColor}"></div>
+              <span class="mono">${formatDuration(r.durationSec)}</span>
+            </div>
+          </td>
+          <td>${badge}</td>
+        </tr>`;
+      }).join('');
+    }
+    renderPagination();
+  }
+
+  function renderPagination() {
+    const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
+    const pag = document.getElementById('pagination');
+    if (totalPages <= 1) { pag.innerHTML = ''; return; }
+
+    let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+    const range = [];
+    for (let i = Math.max(1, currentPage-2); i <= Math.min(totalPages, currentPage+2); i++) range.push(i);
+    if (range[0] > 1) { html += `<button class="page-btn" onclick="goPage(1)">1</button>`; if (range[0]>2) html += `<span class="page-info">…</span>`; }
+    range.forEach(p => html += `<button class="page-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`);
+    if (range[range.length-1] < totalPages) {
+      if (range[range.length-1] < totalPages-1) html += `<span class="page-info">…</span>`;
+      html += `<button class="page-btn" onclick="goPage(${totalPages})">${totalPages}</button>`;
+    }
+    html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>›</button>`;
+    html += `<span class="page-info">${currentPage} / ${totalPages}</span>`;
+    pag.innerHTML = html;
+  }
+
+  function goPage(p) {
+    const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
+    if (p < 1 || p > totalPages) return;
+    currentPage = p;
+    renderTable();
+    document.getElementById('tableWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ── 팀별 카드 데이터 ──
+  let TEAM_CONFIG = [
+    { id: 't2-1', name: 'BM2-1팀', members: ['김하늘','정세영','이태웅','윤소영','박태민','서진여'] },
+    { id: 't2-2', name: 'BM2-2팀', members: ['서혜진','박서영','안소은','박아연','장영진'] },
+    { id: 't2-3', name: 'BM2-3팀', members: ['최보경','박소은','이다연','장익준','차민경','김윤석'] },
+    { id: 't3-1', name: 'BM3-1팀', members: ['심갑용','임현실','김지혜','문태희'] },
+    { id: 't3-2', name: 'BM3-2팀', members: ['강태욱','하강우','오경진','강민정'] },
+  ];
+
+  // 팀 카드 메모 저장소
+  window._teamMemoMap = window._teamMemoMap || {};
+
+  function renderTeamCards() {
+    const grid = document.getElementById('teamCardGrid');
+    if (!grid) return;
+
+    // filteredData에서 상담원별 집계
+    const agentMap = {};
+    filteredData.forEach(r => {
+      if (!r.agent) return;
+      if (!agentMap[r.agent]) agentMap[r.agent] = { total: 0, totalSec: 0, dept: r.dept };
+      agentMap[r.agent].total++;
+      agentMap[r.agent].totalSec += r.durationSec;
+    });
+
+    grid.innerHTML = TEAM_CONFIG.map(team => {
+      const colorClass = team.id;
+      const rows = team.members.map(name => {
+        const d = agentMap[name] || { total: 0, totalSec: 0 };
+        const memoKey = `${team.id}__${name}`;
+        const memo = (window._teamMemoMap[memoKey] || '').replace(/"/g, '&quot;');
+        return `<tr>
+          <td>${name}</td>
+          <td>${d.total || '-'}</td>
+          <td style="font-family:monospace;font-size:11px">${d.total ? formatDuration(d.totalSec) : '-'}</td>
+          <td><textarea class="memo-input" rows="1" placeholder="메모..."
+            onchange="saveTeamMemo('${memoKey.replace(/'/g,"\'")}', this.value)"
+            onblur="saveTeamMemo('${memoKey.replace(/'/g,"\'")}', this.value)">${memo}</textarea></td>
+        </tr>`;
+      }).join('');
+
+      const teamTotal   = team.members.reduce((s,n) => s + (agentMap[n]?.total    || 0), 0);
+      const teamTotalSec= team.members.reduce((s,n) => s + (agentMap[n]?.totalSec || 0), 0);
+
+      return `<div class="team-card">
+        <div class="team-card-title ${colorClass}">
+          <span>${team.name}</span>
+          <span style="font-size:11px;opacity:0.85">${team.members.length}명</span>
+        </div>
+        <table>
+          <thead><tr>
+            <th style="text-align:left">이름</th>
+            <th>건수</th>
+            <th>통화합계</th>
+            <th style="min-width:80px">메모</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div class="team-card-footer">
+          <span>합계 <strong>${teamTotal}건</strong></span>
+          <span>통화시간 <strong>${formatDuration(teamTotalSec)}</strong></span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function saveTeamMemo(key, val) {
+    window._teamMemoMap[key] = val;
+  }
+
+  // ── 팀원 편집 모달 ──
+  function openTeamEdit() {
+    const blocks = document.getElementById('modalTeamBlocks');
+    blocks.innerHTML = TEAM_CONFIG.map(team => `
+      <div class="modal-team-block">
+        <label>${team.name}</label>
+        <textarea id="modal_${team.id}">${team.members.join('\n')}</textarea>
+      </div>`).join('');
+    document.getElementById('teamEditModal').classList.add('open');
+  }
+
+  function closeTeamEdit() {
+    document.getElementById('teamEditModal').classList.remove('open');
+  }
+
+  function saveTeamEdit() {
+    TEAM_CONFIG.forEach(team => {
+      const ta = document.getElementById('modal_' + team.id);
+      if (ta) {
+        team.members = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
+      }
+    });
+    closeTeamEdit();
+    renderTeamCards();
+  }
+
+  // ── 팀 카드 PDF ──
+  function downloadTeamPDF() {
+    if (!window.html2canvas) {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      s.onload = generateTeamPDF;
+      document.head.appendChild(s);
+    } else { generateTeamPDF(); }
+  }
+
+  function generateTeamPDF() {
+    if (!window.jspdf) {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      s.onload = generateTeamPDF;
+      document.head.appendChild(s);
+      return;
+    }
+
+    const dateFrom = document.getElementById('dateFrom').value || '';
+    const dateTo   = document.getElementById('dateTo').value   || '';
+    const timeFrom = document.getElementById('timeFrom').value || '00:00';
+    const timeTo   = document.getElementById('timeTo').value   || '23:59';
+    const typeLabel = {'all':'전체','in':'인콜','out':'아웃콜'}[currentType] || '전체';
+    const now = new Date();
+    const stamp = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+    // 상담원별 집계
+    const agentMap = {};
+    filteredData.forEach(r => {
+      if (!r.agent) return;
+      if (!agentMap[r.agent]) agentMap[r.agent] = { total: 0, totalSec: 0 };
+      agentMap[r.agent].total++;
+      agentMap[r.agent].totalSec += r.durationSec;
+    });
+
+    const A4_W = 794;
+    const TEAM_COLORS = { 't2-1':'#2563eb','t2-2':'#7c3aed','t2-3':'#db2777','t3-1':'#059669','t3-2':'#d97706' };
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText = `position:fixed;left:-9999px;top:0;width:${A4_W}px;background:#fff;font-family:'Noto Sans KR',sans-serif;padding:24px 24px 16px;box-sizing:border-box;`;
+
+    // 헤더
+    wrap.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px;border-bottom:2px solid #00a884;padding-bottom:10px;">
+        <div>
+          <div style="font-size:17px;font-weight:700;color:#1a202c;">팀별 통화 현황</div>
+          <div style="font-size:10px;color:#64748b;margin-top:3px;">기간: ${dateFrom} ~ ${dateTo} &nbsp;|&nbsp; 시간: ${timeFrom} ~ ${timeTo} &nbsp;|&nbsp; 유형: ${typeLabel}</div>
+        </div>
+        <div style="font-size:10px;color:#94a3b8;">출력: ${stamp}</div>
+      </div>
+      <div id="pdfTeamGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;"></div>`;
+
+    document.body.appendChild(wrap);
+    const pdfGrid = wrap.querySelector('#pdfTeamGrid');
+
+    TEAM_CONFIG.forEach(team => {
+      const color = TEAM_COLORS[team.id] || '#00a884';
+      const teamTotal    = team.members.reduce((s,n) => s + (agentMap[n]?.total    || 0), 0);
+      const teamTotalSec = team.members.reduce((s,n) => s + (agentMap[n]?.totalSec || 0), 0);
+
+      const memberRows = team.members.map(name => {
+        const d = agentMap[name] || { total: 0, totalSec: 0 };
+        const memoKey = `${team.id}__${name}`;
+        const memo = window._teamMemoMap[memoKey] || '';
+        return `<tr style="border-bottom:1px solid #f1f5f9;">
+          <td style="padding:5px 8px;font-size:11px;font-weight:600;color:#1a202c;">${name}</td>
+          <td style="padding:5px 6px;font-size:11px;text-align:center;color:#374151;">${d.total || '-'}</td>
+          <td style="padding:5px 6px;font-size:10px;text-align:center;font-family:monospace;color:#374151;">${d.total ? formatDuration(d.totalSec) : '-'}</td>
+          <td style="padding:5px 6px;font-size:10px;color:#475569;word-break:break-all;">${memo}</td>
+        </tr>`;
+      }).join('');
+
+      const card = document.createElement('div');
+      card.style.cssText = 'border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;break-inside:avoid;';
+      card.innerHTML = `
+        <div style="background:${color};color:#fff;padding:7px 12px;font-size:12px;font-weight:700;display:flex;justify-content:space-between;">
+          <span>${team.name}</span><span style="font-size:10px;opacity:0.85">${team.members.length}명</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;">
+          <thead><tr style="background:#f8fafc;">
+            <th style="padding:5px 8px;font-size:10px;font-weight:700;color:#64748b;text-align:left;border-bottom:1px solid #e2e8f0;">이름</th>
+            <th style="padding:5px 6px;font-size:10px;font-weight:700;color:#64748b;text-align:center;border-bottom:1px solid #e2e8f0;">건수</th>
+            <th style="padding:5px 6px;font-size:10px;font-weight:700;color:#64748b;text-align:center;border-bottom:1px solid #e2e8f0;">통화합계</th>
+            <th style="padding:5px 6px;font-size:10px;font-weight:700;color:#64748b;text-align:left;border-bottom:1px solid #e2e8f0;">메모</th>
+          </tr></thead>
+          <tbody>${memberRows}</tbody>
+        </table>
+        <div style="padding:5px 12px;background:#f8fafc;border-top:1px solid #e2e8f0;font-size:10px;color:#64748b;display:flex;gap:12px;">
+          <span>합계 <strong style="color:#1a202c">${teamTotal}건</strong></span>
+          <span>통화시간 <strong style="color:#1a202c">${formatDuration(teamTotalSec)}</strong></span>
+        </div>`;
+      pdfGrid.appendChild(card);
+    });
+
+    html2canvas(wrap, { scale: 2, useCORS: true, backgroundColor: '#ffffff', width: A4_W, windowWidth: A4_W }).then(canvas => {
+      document.body.removeChild(wrap);
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pW = 210, pH = 297, margin = 0;
+      const maxW = pW - margin * 2;
+      const ratio = canvas.width / maxW;
+      const scaledH = canvas.height / ratio;
+      const pageH = pH - margin * 2;
+      let offsetMM = 0;
+      while (offsetMM < scaledH) {
+        if (offsetMM > 0) pdf.addPage();
+        const sliceH = Math.min(pageH, scaledH - offsetMM);
+        const srcY = Math.round(offsetMM * ratio);
+        const srcH = Math.round(sliceH * ratio);
+        const tmp = document.createElement('canvas');
+        tmp.width = canvas.width; tmp.height = srcH;
+        tmp.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
+        pdf.addImage(tmp.toDataURL('image/png'), 'PNG', margin, margin, maxW, sliceH);
+        offsetMM += pageH;
+      }
+      pdf.save(`팀별통화현황_${dateFrom}_${dateTo}.pdf`);
+    });
+  }
+
+  // 메모 저장소 (agentName → 메모 문자열)
+  window._memoMap = window._memoMap || {};
+
+  function saveMemo(agent, val) {
+    window._memoMap[agent] = val;
+  }
+
+  function renderAgentSummary() {
+    const map = {};
+    filteredData.forEach(r => {
+      if (!r.agent) return;
+      // BM2본부 / BM3본부 소속만 표시
+      if (!r._hq || (!r._hq.startsWith('BM2') && !r._hq.startsWith('BM3'))) return;
+      if (!map[r.agent]) map[r.agent] = { agent: r.agent, dept: r.dept, total: 0, in: 0, out: 0, totalSec: 0 };
+      map[r.agent].total++;
+      if (r.type === 'in') map[r.agent].in++;
+      else map[r.agent].out++;
+      map[r.agent].totalSec += r.durationSec;
+    });
+
+    const agents = Object.values(map).sort((a, b) => b.total - a.total);
+    const rc = document.getElementById('agentRowCount');
+    if (rc) rc.textContent = `${agents.length}명`;
+    const maxTotal = agents.length ? agents[0].total : 1;
+
+    document.getElementById('agentTableBody').innerHTML = agents.map(a => {
+      const avg      = a.total ? Math.round(a.totalSec / a.total) : 0;
+      const barW     = Math.round((a.total / maxTotal) * 120);
+      const totalAll = (window._agentTotalMap || {})[a.agent] || a.total;
+      const memo     = (window._memoMap[a.agent] || '').replace(/"/g, '&quot;');
+      return `<tr>
+        <td class="agent-name">${a.agent}</td>
+        <td style="color:var(--text-sub)">${a.dept}</td>
+        <td><strong>${a.total}</strong></td>
+        <td class="mono" style="color:var(--text-sub)">${totalAll}</td>
+        <td style="color:var(--in-color)">${a.in}</td>
+        <td style="color:var(--out-color)">${a.out}</td>
+        <td class="mono">${formatDuration(a.totalSec)}</td>
+        <td class="mono">${formatDuration(avg)}</td>
+        <td>
+          <div class="mini-bar-wrap">
+            <div class="mini-bar" style="width:${barW}px"></div>
+            <span class="mono" style="font-size:11px;color:var(--text-sub)">${a.total}건</span>
+          </div>
+        </td>
+        <td><textarea class="memo-input" rows="2" placeholder="메모 입력..."
+          onchange="saveMemo('${a.agent.replace(/'/g,"\'")}', this.value)"
+          onblur="saveMemo('${a.agent.replace(/'/g,"\'")}', this.value)">${memo}</textarea></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── PDF 다운로드 — 세로 A4, 건수비중 제외 9컬럼 ──
+  function downloadPDF() {
+    if (!window.html2canvas) {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      s.onload = generatePDF;
+      document.head.appendChild(s);
+    } else { generatePDF(); }
+  }
+
+  function generatePDF() {
+    if (!window.jspdf) {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      s.onload = generatePDF;
+      document.head.appendChild(s);
+      return;
+    }
+
+    // ── 데이터 수집 ──
+    const dateFrom  = document.getElementById('dateFrom').value  || '';
+    const dateTo    = document.getElementById('dateTo').value    || '';
+    const timeFrom  = document.getElementById('timeFrom').value  || '00:00';
+    const timeTo    = document.getElementById('timeTo').value    || '23:59';
+    const minDur    = document.getElementById('minDuration').value || '0';
+    const typeLabel = {'all':'전체','in':'인콜','out':'아웃콜'}[currentType] || '전체';
+    const now = new Date();
+    const stamp = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+    // 행 데이터 (건수비중 td[8] 제외, 메모 textarea)
+    const rows = [];
+    document.querySelectorAll('#agentTableBody tr').forEach(tr => {
+      const tds  = tr.querySelectorAll('td');
+      const memo = tr.querySelector('textarea')?.value || '';
+      rows.push({
+        agent:    tds[0]?.textContent.trim() || '',
+        dept:     tds[1]?.textContent.trim() || '',
+        total:    tds[2]?.textContent.trim() || '',
+        totalAll: tds[3]?.textContent.trim() || '',
+        inCall:   tds[4]?.textContent.trim() || '',
+        outCall:  tds[5]?.textContent.trim() || '',
+        dur:      tds[6]?.textContent.trim() || '',
+        avg:      tds[7]?.textContent.trim() || '',
+        memo,
+      });
+    });
+
+    // ── PDF 전용 오프스크린 테이블 생성 ──
+    // A4 세로 = 210mm = 794px @96dpi → 캡처 width 고정
+    const A4_W_PX = 794;
+    const SCALE   = 2;  // retina
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText = `
+      position:fixed; left:-9999px; top:0;
+      width:${A4_W_PX}px; background:#fff;
+      font-family:'Noto Sans KR',sans-serif;
+      padding:28px 28px 20px;
+      box-sizing:border-box;
+    `;
+
+    // 헤더
+    const headerInfo = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px;border-bottom:2px solid #00a884;padding-bottom:10px;">
+        <div>
+          <div style="font-size:18px;font-weight:700;color:#1a202c;">인원별 통화 요약</div>
+          <div style="font-size:11px;color:#64748b;margin-top:4px;">
+            기간: ${dateFrom} ~ ${dateTo} &nbsp;|&nbsp; 시간: ${timeFrom} ~ ${timeTo} &nbsp;|&nbsp; 유형: ${typeLabel} &nbsp;|&nbsp; 최소통화: ${minDur}초
+          </div>
+        </div>
+        <div style="font-size:10px;color:#94a3b8;">출력: ${stamp}</div>
+      </div>`;
+
+    // 통계 요약 바
+    const totalCalls = rows.reduce((s,r) => s + (parseInt(r.total)||0), 0);
+    const totalIn    = rows.reduce((s,r) => s + (parseInt(r.inCall)||0), 0);
+    const totalOut   = rows.reduce((s,r) => s + (parseInt(r.outCall)||0), 0);
+    const statsBar = `
+      <div style="display:flex;gap:10px;margin-bottom:14px;">
+        ${[['총 조회건수', totalCalls,'#1a202c'],['인콜', totalIn,'#2563eb'],['아웃콜', totalOut,'#059669'],['상담원 수', rows.length,'#00a884']]
+          .map(([label,val,color]) => `
+            <div style="flex:1;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;">
+              <div style="font-size:10px;color:#64748b;margin-bottom:2px;">${label}</div>
+              <div style="font-size:18px;font-weight:700;color:${color};">${val}</div>
+            </div>`).join('')}
+      </div>`;
+
+    // 컬럼 너비 (합계 = 794 - 56 = 738px)
+    // 상담원60, 부서60, 조회26, 전체26, 인콜26, 아웃콜26, 총통화시간80, 평균통화시간80, 메모 나머지
+    const cols = [
+      { label:'상담원',   w:60  },
+      { label:'부서',     w:60  },
+      { label:'조회건수', w:40  },
+      { label:'전체통화', w:40  },
+      { label:'인콜',     w:36  },
+      { label:'아웃콜',   w:40  },
+      { label:'총통화시간', w:88 },
+      { label:'평균통화시간',w:88},
+      { label:'메모',     w:null },  // flex:1
+    ];
+    const fixedW = cols.filter(c=>c.w).reduce((s,c)=>s+c.w,0);
+
+    const thStyle = `background:#f0f7f5;color:#374151;font-size:10px;font-weight:700;padding:7px 6px;text-align:center;border-bottom:1px solid #cbd5e1;`;
+    const tdStyle = (align='center') => `padding:6px 6px;font-size:11px;color:#1a202c;border-bottom:1px solid #f1f5f9;text-align:${align};vertical-align:middle;`;
+
+    const thead = `<thead><tr style="background:#f0f7f5;">
+      ${cols.map(c => `<th style="${thStyle}${c.w?`width:${c.w}px;`:''}min-width:${c.w||60}px;">${c.label}</th>`).join('')}
+    </tr></thead>`;
+
+    const tbody = `<tbody>
+      ${rows.map((r,i) => `<tr style="background:${i%2===0?'#fff':'#f8fafc'}">
+        <td style="${tdStyle('left')}font-weight:600;">${r.agent}</td>
+        <td style="${tdStyle('center')}color:#64748b;">${r.dept}</td>
+        <td style="${tdStyle('center')}font-weight:700;">${r.total}</td>
+        <td style="${tdStyle('center')}color:#94a3b8;">${r.totalAll}</td>
+        <td style="${tdStyle('center')}color:#2563eb;">${r.inCall}</td>
+        <td style="${tdStyle('center')}color:#059669;">${r.outCall}</td>
+        <td style="${tdStyle('center')}font-family:monospace;">${r.dur}</td>
+        <td style="${tdStyle('center')}font-family:monospace;">${r.avg}</td>
+        <td style="${tdStyle('left')}color:#475569;font-size:10px;white-space:pre-wrap;word-break:break-all;">${r.memo}</td>
+      </tr>`).join('')}
+    </tbody>`;
+
+    const table = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;">${thead}${tbody}</table>`;
+
+    wrap.innerHTML = headerInfo + statsBar + table;
+    document.body.appendChild(wrap);
+
+    html2canvas(wrap, {
+      scale: SCALE,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      width: A4_W_PX,
+      windowWidth: A4_W_PX,
+    }).then(canvas => {
+      document.body.removeChild(wrap);
+
+      const { jsPDF } = window.jspdf;
+      // 세로 A4: 210 x 297mm
+      const pdf    = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pW     = 210;
+      const pH     = 297;
+      const margin = 0;
+      const maxW   = pW - margin * 2;
+      const imgW   = canvas.width;
+      const imgH   = canvas.height;
+      const ratio  = imgW / maxW;       // px per mm
+      const scaledH = imgH / ratio;     // mm
+      const pageH   = pH - margin * 2;  // 297mm
+
+      let offsetMM = 0;
+      while (offsetMM < scaledH) {
+        if (offsetMM > 0) pdf.addPage();
+        const sliceH  = Math.min(pageH, scaledH - offsetMM);
+        const srcY    = Math.round(offsetMM * ratio);
+        const srcH    = Math.round(sliceH   * ratio);
+        const tmp     = document.createElement('canvas');
+        tmp.width     = imgW;
+        tmp.height    = srcH;
+        tmp.getContext('2d').drawImage(canvas, 0, srcY, imgW, srcH, 0, 0, imgW, srcH);
+        pdf.addImage(tmp.toDataURL('image/png'), 'PNG', margin, margin, maxW, sliceH);
+        offsetMM += pageH;
+      }
+
+      pdf.save(`통화요약_${dateFrom}_${dateTo}.pdf`);
+    });
+  }
+</script>
+</body>
+</html>
