@@ -1492,7 +1492,7 @@
     { id: 't2-1', name: 'BM2-1팀', members: ['김하늘','정세영','이태웅','윤소영','박태민','서진여'] },
     { id: 't2-2', name: 'BM2-2팀', members: ['서혜진','박서영','안소은','박아연','장영진'] },
     { id: 't2-3', name: 'BM2-3팀', members: ['최보경','박소은','이다연','장익준','차민경','김윤석'] },
-    { id: 't3-1', name: 'BM3-1팀', members: ['심갑용','임현실','김지혜'] },
+    { id: 't3-1', name: 'BM3-1팀', members: ['심갑용','임현실','김지혜','문태희'] },
     { id: 't3-2', name: 'BM3-2팀', members: ['강태욱','하강우','오경진','강민정'] },
   ];
 
@@ -1678,7 +1678,7 @@
       pdfGrid.appendChild(card);
     });
 
-    html2canvas(wrap, { scale: 2, useCORS: true, backgroundColor: '#ffffff', width: A4_W, windowWidth: A4_W }).then(canvas => {
+    html2canvas(wrap, { scale: 1.2, useCORS: true, backgroundColor: '#ffffff', width: A4_W, windowWidth: A4_W }).then(canvas => {
       document.body.removeChild(wrap);
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -1696,7 +1696,7 @@
         const tmp = document.createElement('canvas');
         tmp.width = canvas.width; tmp.height = srcH;
         tmp.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
-        pdf.addImage(tmp.toDataURL('image/png'), 'PNG', margin, margin, maxW, sliceH);
+        pdf.addImage(tmp.toDataURL('image/jpeg', 0.85), 'PNG', margin, margin, maxW, sliceH);
         offsetMM += pageH;
       }
       pdf.save(`팀별통화현황_${dateFrom}_${dateTo}.pdf`);
@@ -1823,7 +1823,7 @@
     // ── PDF 전용 오프스크린 테이블 생성 ──
     // A4 세로 = 210mm = 794px @96dpi → 캡처 width 고정
     const A4_W_PX = 794;
-    const SCALE   = 2;  // retina
+    const SCALE   = 1.2;  // ~1.2MB JPEG
 
     const wrap = document.createElement('div');
     wrap.style.cssText = `
@@ -1933,7 +1933,7 @@
         tmp.width     = imgW;
         tmp.height    = srcH;
         tmp.getContext('2d').drawImage(canvas, 0, srcY, imgW, srcH, 0, 0, imgW, srcH);
-        pdf.addImage(tmp.toDataURL('image/png'), 'PNG', margin, margin, maxW, sliceH);
+        pdf.addImage(tmp.toDataURL('image/jpeg', 0.85), 'PNG', margin, margin, maxW, sliceH);
         offsetMM += pageH;
       }
 
