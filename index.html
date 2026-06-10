@@ -887,7 +887,7 @@
       </div>
       <div class="filter-group">
         <label>최소 통화시간 (초)</label>
-        <input type="number" id="minDuration" placeholder="예: 60" min="0" style="min-width:130px">
+        <input type="number" id="minDuration" placeholder="예: 60" min="0" value="75" style="min-width:130px">
       </div>
       <div class="filter-group">
         <label>유형 선택</label>
@@ -1166,12 +1166,10 @@
 
 
 
-    // 날짜 범위 초기화
-    const dates = rawData.map(r => r.date.split(' ')[0]).filter(Boolean).sort();
-    if (dates.length) {
-      document.getElementById('dateFrom').value = dates[0];
-      document.getElementById('dateTo').value = dates[dates.length - 1];
-    }
+    // 날짜 범위 초기화 → 오늘 날짜 기본값
+    const todayStr = new Date().toISOString().slice(0, 10);
+    document.getElementById('dateFrom').value = todayStr;
+    document.getElementById('dateTo').value   = todayStr;
 
     // 부서 드롭다운 갱신
     const depts = [...new Set(rawData.map(r => r.dept).filter(Boolean))].sort();
@@ -1383,11 +1381,11 @@
   }
 
   function resetFilters() {
-    const dates = rawData.map(r => r.date.split(' ')[0]).filter(Boolean).sort();
-    document.getElementById('dateFrom').value = dates[0] || '';
-    document.getElementById('dateTo').value   = dates[dates.length-1] || '';
-    document.getElementById('timeFrom').value = '00:00';
-    document.getElementById('timeTo').value   = '23:59';
+    const todayStr = new Date().toISOString().slice(0, 10);
+    document.getElementById('dateFrom').value    = todayStr;
+    document.getElementById('dateTo').value      = todayStr;
+    document.getElementById('timeFrom').value    = '00:00';
+    document.getElementById('timeTo').value      = '23:59';
     document.getElementById('minDuration').value = '';
     document.getElementById('agentSearch').value = '';
     document.getElementById('deptFilter').value  = '';
