@@ -2380,27 +2380,29 @@
   }
 
   function goThisWeek() {
-    const today = new Date();
-    const monday = getMonday(today);
-    const thisWeekMon = new Date('2026-06-29');
-    if (monday.toISOString().slice(0,10) === thisWeekMon.toISOString().slice(0,10)) {
+    applyWeekStart(getMonday(new Date()));
+    renderV2();
+  }
+
+  function shiftWeek(dir) {
+    if (!v2WeekStart) return;
+    const base = v2WeekEnd ? getMonday(v2WeekStart) : v2WeekStart;
+    const next = new Date(base);
+    next.setDate(next.getDate() + dir * 7);
+    applyWeekStart(next);
+    renderV2();
+  }
+
+  // 주 시작일(월요일) 적용 — 6/29주면 7/1~7/3 특별 처리
+  function applyWeekStart(monday) {
+    const monStr = monday.toISOString().slice(0,10);
+    if (monStr === '2026-06-29') {
       v2WeekStart = new Date('2026-07-01');
       v2WeekEnd   = new Date('2026-07-03');
     } else {
       v2WeekStart = monday;
       v2WeekEnd   = null;
     }
-    renderV2();
-  }
-
-  function shiftWeek(dir) {
-    if (!v2WeekStart) return;
-    // 이동 시: 현재 주 월요일 기준으로 ±7일
-    const base = v2WeekEnd ? getMonday(v2WeekStart) : v2WeekStart;
-    v2WeekStart = new Date(base);
-    v2WeekStart.setDate(v2WeekStart.getDate() + dir * 7);
-    v2WeekEnd = null; // 이동하면 일반 월~금으로
-    renderV2();
   }
 
   // ══════════════════════════════════════════
