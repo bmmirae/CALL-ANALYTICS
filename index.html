@@ -2321,10 +2321,11 @@
   // ── v2 상태 ──
   // ══════════════════════════════════════════
   let v2Type      = 'all';   // 'all' | 'in' | 'out'
-  let v2WeekStart = null;    // 이번 주 월요일 Date
+  let v2WeekStart = null;    // 주간 시작일 (Date)
+  let v2WeekEnd   = null;    // 주간 종료일 (Date, 기본 금요일)
   let v2Mode      = 'week';  // 'week' | 'range'
-  let v2RangeFrom = null;    // 기간선택 시작일 (Date)
-  let v2RangeTo   = null;    // 기간선택 종료일 (Date)
+  let v2RangeFrom = null;    // 기간선택 시작일
+  let v2RangeTo   = null;    // 기간선택 종료일
 
   function setV2Mode(mode) {
     v2Mode = mode;
@@ -2379,14 +2380,26 @@
   }
 
   function goThisWeek() {
-    v2WeekStart = getMonday(new Date());
+    const today = new Date();
+    const monday = getMonday(today);
+    const thisWeekMon = new Date('2026-06-29');
+    if (monday.toISOString().slice(0,10) === thisWeekMon.toISOString().slice(0,10)) {
+      v2WeekStart = new Date('2026-07-01');
+      v2WeekEnd   = new Date('2026-07-03');
+    } else {
+      v2WeekStart = monday;
+      v2WeekEnd   = null;
+    }
     renderV2();
   }
 
   function shiftWeek(dir) {
     if (!v2WeekStart) return;
-    v2WeekStart = new Date(v2WeekStart);
+    // 이동 시: 현재 주 월요일 기준으로 ±7일
+    const base = v2WeekEnd ? getMonday(v2WeekStart) : v2WeekStart;
+    v2WeekStart = new Date(base);
     v2WeekStart.setDate(v2WeekStart.getDate() + dir * 7);
+    v2WeekEnd = null; // 이동하면 일반 월~금으로
     renderV2();
   }
 
@@ -2451,15 +2464,31 @@
       return;
     }
 
-    // 주간 기준 초기화
-    if (!v2WeekStart) v2WeekStart = getMonday(new Date());
+    // 주간 기준 초기화 — 기본: 7/1~7/3
+    if (!v2WeekStart) {
+      v2WeekStart = new Date('2026-07-01');
+      v2WeekEnd   = new Date('2026-07-03');
+    }
 
     let weekDays, periodLabel;
 
     if (v2Mode === 'week') {
-      weekDays    = getWeekDays(v2WeekStart);
-      const friday = new Date(v2WeekStart); friday.setDate(friday.getDate() + 4);
-      periodLabel = `${v2WeekStart.getFullYear()}년 ${formatDateKR(v2WeekStart)}(월) ~ ${formatDateKR(friday)}(금)`;
+      const endDate = v2WeekEnd || (() => {
+        const f = new Date(v2WeekStart); f.setDate(f.getDate() + 4); return f;
+      })();
+      // 시작~종료 사이 날짜 배열 생성
+      weekDays = [];
+      const cur = new Date(v2WeekStart);
+      while (cur <= endDate) {
+        const dow = cur.getDay();
+        if (dow !== 0 && dow !== 6) weekDays.push(cur.toISOString().slice(0,10)); // 평일만
+        cur.setDate(cur.getDate() + 1);
+      }
+      const startD = v2WeekStart;
+      const endD   = endDate;
+      // 요일 라벨
+      const dayNames = ['일','월','화','수','목','금','토'];
+      periodLabel = `${startD.getFullYear()}년 ${formatDateKR(startD)}(${dayNames[startD.getDay()]}) ~ ${formatDateKR(endD)}(${dayNames[endD.getDay()]})`;
       document.getElementById('v2WeekLabel').textContent = periodLabel;
     } else {
       // 기간선택 모드
@@ -2560,9 +2589,16 @@
 
     let weekDays, weekLabel;
     if (v2Mode === 'week') {
-      weekDays  = getWeekDays(v2WeekStart);
-      const friday = new Date(v2WeekStart); friday.setDate(friday.getDate() + 4);
-      weekLabel = `${v2WeekStart.getFullYear()}년 ${formatDateKR(v2WeekStart)}(월) ~ ${formatDateKR(friday)}(금)`;
+      const endDate = v2WeekEnd || (() => { const f=new Date(v2WeekStart); f.setDate(f.getDate()+4); return f; })();
+      weekDays = [];
+      const cur = new Date(v2WeekStart);
+      while (cur <= endDate) {
+        const dow = cur.getDay();
+        if (dow!==0 && dow!==6) weekDays.push(cur.toISOString().slice(0,10));
+        cur.setDate(cur.getDate()+1);
+      }
+      const dayNames = ['일','월','화','수','목','금','토'];
+      weekLabel = `${v2WeekStart.getFullYear()}년 ${formatDateKR(v2WeekStart)}(${dayNames[v2WeekStart.getDay()]}) ~ ${formatDateKR(endDate)}(${dayNames[endDate.getDay()]})`;
     } else {
       weekDays  = null;
       weekLabel = `${v2RangeFrom} ~ ${v2RangeTo}`;
@@ -2656,7 +2692,7 @@
         offsetMM+=pageH;
       }
       const pdfName = v2Mode === 'week'
-        ? `통화시간분석_v2_${weekDays[0]}_${weekDays[4]}.pdf`
+        ? `통화시간분석_v2_${weekDays[0]}_${weekDays[weekDays.length-1]}.pdf`
         : `통화시간분석_v2_${v2RangeFrom}_${v2RangeTo}.pdf`;
       pdf.save(pdfName);
     });
