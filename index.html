@@ -533,6 +533,240 @@
   }
   .btn-pdf:hover { filter: brightness(1.1); }
 
+  /* ── v1/v2 탭 ── */
+  .version-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 5px;
+    width: fit-content;
+    box-shadow: var(--shadow);
+  }
+
+  .vtab {
+    padding: 8px 24px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-sub);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+
+  .vtab.active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0,168,132,0.3);
+  }
+
+  [data-theme="dark"] .vtab.active {
+    box-shadow: 0 2px 8px rgba(0,212,170,0.25);
+  }
+
+  .v-panel { display: none; }
+  .v-panel.active { display: block; }
+
+  /* ── v2 모드 토글 ── */
+  .mode-toggle {
+    display: flex;
+    gap: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+  }
+
+  .mode-btn {
+    padding: 6px 16px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-sub);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .mode-btn.active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  [data-theme="dark"] .mode-btn.active {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+
+  .date-range-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .date-range-nav input[type="date"] {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 6px 10px;
+    font-size: 13px;
+    font-family: 'Noto Sans KR', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .date-range-nav input[type="date"]:focus { border-color: var(--accent); }
+
+  .date-range-sep {
+    font-size: 13px;
+    color: var(--text-sub);
+    font-weight: 600;
+  }
+
+  /* ── v2 주간 분석 카드 ── */
+  .week-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .week-nav .week-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    min-width: 200px;
+    text-align: center;
+  }
+
+  .week-btn {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-sub);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .week-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .v2-team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .v2-team-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .v2-card-title {
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .v2-card-title.t2-1 { background: #2563eb; }
+  .v2-card-title.t2-2 { background: #7c3aed; }
+  .v2-card-title.t2-3 { background: #db2777; }
+  .v2-card-title.t3-1 { background: #059669; }
+  .v2-card-title.t3-2 { background: #d97706; }
+
+  .v2-card-title .team-total-time {
+    font-size: 11px;
+    opacity: 0.9;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .v2-card table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .v2-card thead th {
+    padding: 6px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-sub);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    text-align: center;
+    cursor: default;
+  }
+
+  .v2-card thead th:first-child { text-align: left; }
+
+  .v2-card tbody td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    text-align: center;
+    vertical-align: middle;
+    font-size: 12px;
+  }
+
+  [data-theme="light"] .v2-card tbody td { border-bottom-color: #f1f5f9; }
+  .v2-card tbody td:first-child { text-align: left; font-weight: 600; }
+  .v2-card tbody tr:last-child td { border-bottom: none; }
+  .v2-card tbody tr:hover { background: rgba(0,0,0,0.02); }
+
+  .time-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .time-bar {
+    height: 5px;
+    border-radius: 3px;
+    background: var(--accent);
+    min-width: 2px;
+    flex-shrink: 0;
+  }
+
+  .time-bar.capped { background: #ef4444; }
+
+  .v2-rules-note {
+    font-size: 11px;
+    color: var(--text-sub);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    margin-bottom: 14px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .v2-rules-note span { display: flex; align-items: center; gap: 5px; }
+
   /* ── File tag list ── */
   .file-list {
     display: flex;
@@ -836,7 +1070,7 @@
 
 <header>
   <div class="logo">CALL ANALYTICS</div>
-  <div class="sub">녹취 통화 분석 시스템</div>
+  <div class="sub" id="headerSub">v1 · 통화건수 분석</div>
   <div class="spacer"></div>
   <div class="theme-toggle" onclick="toggleTheme()" title="테마 변경">
     <span class="theme-icon" id="themeIcon">🌙</span>
@@ -848,6 +1082,15 @@
 </header>
 
 <div class="main">
+
+  <!-- 버전 탭 -->
+  <div class="version-tabs">
+    <button class="vtab active" id="tab-v1" onclick="switchTab('v1')">v1 · 통화건수</button>
+    <button class="vtab"        id="tab-v2" onclick="switchTab('v2')">v2 · 통화시간</button>
+  </div>
+
+  <!-- ══ v1 패널 ══ -->
+  <div class="v-panel active" id="panel-v1">
 
   <!-- Upload -->
   <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
@@ -1000,6 +1243,82 @@
     </div>
     </div><!-- /agentBody -->
   </div>
+
+  </div><!-- /panel-v1 -->
+
+  <!-- ══ v2 패널 ══ -->
+  <div class="v-panel" id="panel-v2">
+
+    <!-- v2 업로드는 v1과 공유 — 안내 문구 -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 20px;margin-bottom:16px;font-size:13px;color:var(--text-sub);box-shadow:var(--shadow);">
+      📂 <strong style="color:var(--text)">v1과 동일한 파일을 사용합니다.</strong> 위 v1 탭에서 파일을 먼저 업로드해 주세요.
+    </div>
+
+    <!-- v2 필터 -->
+    <div class="filter-panel visible" id="v2FilterPanel" style="margin-bottom:16px;">
+      <div class="filter-title">🔍 v2 필터</div>
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>유형 선택</label>
+          <div class="type-toggle">
+            <button class="type-btn active-all" data-type="all" onclick="setV2Type('all')">전체</button>
+            <button class="type-btn" data-type="in"  onclick="setV2Type('in')">인콜</button>
+            <button class="type-btn" data-type="out" onclick="setV2Type('out')">아웃콜</button>
+          </div>
+        </div>
+        <div class="filter-group" style="flex-direction:row;gap:8px;align-self:flex-end">
+          <button class="btn btn-primary" onclick="renderV2()">적용</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 날짜 컨트롤 -->
+    <div id="v2WeekNav" style="display:none">
+
+      <!-- 모드 토글 + 네비 한 줄 -->
+      <div class="week-nav" style="margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+        <!-- 모드 토글 -->
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="modeWeekBtn" onclick="setV2Mode('week')">📅 주간보기</button>
+          <button class="mode-btn"        id="modeRangeBtn" onclick="setV2Mode('range')">📆 기간선택</button>
+        </div>
+
+        <!-- 주간 모드 컨트롤 -->
+        <div id="weekModeNav" class="week-nav" style="margin-bottom:0;gap:8px;">
+          <button class="week-btn" onclick="shiftWeek(-1)">‹</button>
+          <div class="week-label" id="v2WeekLabel" style="min-width:220px">-</div>
+          <button class="week-btn" onclick="shiftWeek(1)">›</button>
+          <button class="btn btn-ghost" style="font-size:12px;padding:6px 14px;" onclick="goThisWeek()">이번 주</button>
+        </div>
+
+        <!-- 기간 선택 모드 컨트롤 -->
+        <div id="rangeModeNav" class="date-range-nav" style="display:none;">
+          <input type="date" id="v2DateFrom">
+          <span class="date-range-sep">~</span>
+          <input type="date" id="v2DateTo">
+          <button class="btn btn-primary" style="font-size:12px;padding:7px 16px;" onclick="applyDateRange()">적용</button>
+        </div>
+
+        <!-- PDF 버튼 -->
+        <button class="btn-pdf" style="margin-left:auto;" onclick="downloadV2PDF()">📄 PDF 저장</button>
+      </div>
+
+      <div class="v2-rules-note">
+        <span>🕐 <strong>20분 캡</strong>: 20분 초과 통화는 20분으로 계산</span>
+        <span>📞 <strong>중복 제거</strong>: 같은 번호 중 가장 긴 통화만 합산</span>
+        <span style="color:#ef4444">■ 빨간 바 = 캡 적용</span>
+      </div>
+
+      <!-- v2 팀 카드 그리드 -->
+      <div class="v2-team-grid" id="v2TeamGrid"></div>
+    </div>
+
+    <div id="v2EmptyMsg" style="text-align:center;padding:60px;color:var(--text-sub);display:none;">
+      <div style="font-size:40px;margin-bottom:12px;">📂</div>
+      <p>v1 탭에서 파일을 업로드하면 자동으로 분석됩니다.</p>
+    </div>
+
+  </div><!-- /panel-v2 -->
 
   <!-- Data table (접기/펼치기) -->
   <div class="table-wrap" id="tableWrap" style="display:none; margin-top:20px">
@@ -1179,6 +1498,8 @@
 
     document.getElementById('filterPanel').classList.add('visible');
     if (rawData.length > 0) applyFilters();
+    // v2 탭이 열려있으면 함께 갱신
+    if (document.getElementById('panel-v2')?.classList.contains('active')) renderV2();
   }
 
   function renderHqChips(allHqs) {
@@ -1487,7 +1808,7 @@
 
   // ── 팀별 카드 데이터 ──
   // 팀 구성이 바뀔 때마다 이 해시값도 자동 갱신됨
-  const TEAM_CONFIG_VERSION = '48e1854a';
+  const TEAM_CONFIG_VERSION = '67ea4343';
 
   // localStorage에 저장된 팀 구성이 현재 코드 버전과 다르면 코드 기준으로 덮어씀
   // → GitHub Pages 캐시 문제 없이 항상 최신 팀 구성 반영
@@ -1516,11 +1837,11 @@
   }
 
   const _DEFAULT_TEAM_CONFIG = [
-    { id: 't2-1', name: 'BM2-1팀', members: ['김하늘','정세영','이태웅','윤소영','박태민','서진여'] },
+    { id: 't2-1', name: 'BM2-1팀', members: ['김하늘','정세영','이태웅','윤소영','서진여'] },
     { id: 't2-2', name: 'BM2-2팀', members: ['서혜진','박서영','안소은','김예닮'] },
-    { id: 't2-3', name: 'BM2-3팀', members: ['최보경','박소은','이다연','장익준','차민경'] },
+    { id: 't2-3', name: 'BM2-3팀', members: ['최보경','박소은','이다연','차민경'] },
     { id: 't3-1', name: 'BM3-1팀', members: ['심갑용','임현실','김지혜'] },
-    { id: 't3-2', name: 'BM3-2팀', members: ['강태욱','하강우','오경진','강민정','류은영'] },
+    { id: 't3-2', name: 'BM3-2팀', members: ['강태욱','하강우','오경진','강민정'] },
   ];
 
   // 코드 버전 기준으로 팀 구성 초기화 (편집 내용 있으면 유지, 코드 업데이트 시 리셋)
@@ -1976,6 +2297,368 @@
       }
 
       pdf.save(`통화요약_${dateFrom}_${dateTo}.pdf`);
+    });
+  }
+
+  // ══════════════════════════════════════════
+  // ── v1/v2 탭 전환 ──
+  // ══════════════════════════════════════════
+  function switchTab(ver) {
+    document.querySelectorAll('.vtab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.v-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + ver).classList.add('active');
+    document.getElementById('panel-' + ver).classList.add('active');
+    document.getElementById('headerSub').textContent =
+      ver === 'v1' ? 'v1 · 통화건수 분석' : 'v2 · 통화시간 분석';
+    if (ver === 'v2' && rawData.length > 0) renderV2();
+    if (ver === 'v2' && rawData.length === 0) {
+      document.getElementById('v2EmptyMsg').style.display = '';
+      document.getElementById('v2WeekNav').style.display = 'none';
+    }
+  }
+
+  // ══════════════════════════════════════════
+  // ── v2 상태 ──
+  // ══════════════════════════════════════════
+  let v2Type      = 'all';   // 'all' | 'in' | 'out'
+  let v2WeekStart = null;    // 이번 주 월요일 Date
+  let v2Mode      = 'week';  // 'week' | 'range'
+  let v2RangeFrom = null;    // 기간선택 시작일 (Date)
+  let v2RangeTo   = null;    // 기간선택 종료일 (Date)
+
+  function setV2Mode(mode) {
+    v2Mode = mode;
+    document.getElementById('modeWeekBtn').classList.toggle('active', mode === 'week');
+    document.getElementById('modeRangeBtn').classList.toggle('active', mode === 'range');
+    document.getElementById('weekModeNav').style.display  = mode === 'week'  ? '' : 'none';
+    document.getElementById('rangeModeNav').style.display = mode === 'range' ? '' : 'none';
+    if (mode === 'week') {
+      if (!v2WeekStart) v2WeekStart = getMonday(new Date());
+      renderV2();
+    }
+  }
+
+  function applyDateRange() {
+    const from = document.getElementById('v2DateFrom').value;
+    const to   = document.getElementById('v2DateTo').value;
+    if (!from || !to) return;
+    v2RangeFrom = from;
+    v2RangeTo   = to;
+    renderV2();
+  }
+
+  function setV2Type(t) {
+    v2Type = t;
+    document.querySelectorAll('#v2FilterPanel .type-btn').forEach(b => {
+      b.className = 'type-btn';
+      if (b.dataset.type === t) b.classList.add('active-' + t);
+    });
+  }
+
+  // 날짜 → 해당 주 월요일(Date) 반환
+  function getMonday(d) {
+    const dt = new Date(d);
+    const day = dt.getDay(); // 0=일,1=월,...
+    const diff = day === 0 ? -6 : 1 - day;
+    dt.setDate(dt.getDate() + diff);
+    dt.setHours(0,0,0,0);
+    return dt;
+  }
+
+  // 월요일 기준 해당 주 월~금 배열 반환
+  function getWeekDays(monday) {
+    return Array.from({length:5}, (_,i) => {
+      const d = new Date(monday);
+      d.setDate(d.getDate() + i);
+      return d.toISOString().slice(0,10);
+    });
+  }
+
+  function formatDateKR(d) {
+    return `${d.getMonth()+1}/${d.getDate()}`;
+  }
+
+  function goThisWeek() {
+    v2WeekStart = getMonday(new Date());
+    renderV2();
+  }
+
+  function shiftWeek(dir) {
+    if (!v2WeekStart) return;
+    v2WeekStart = new Date(v2WeekStart);
+    v2WeekStart.setDate(v2WeekStart.getDate() + dir * 7);
+    renderV2();
+  }
+
+  // ══════════════════════════════════════════
+  // ── v2 핵심 집계 로직 ──
+  // ══════════════════════════════════════════
+  const CAP_SEC = 20 * 60; // 20분 캡
+
+  // rawData → 주어진 날짜 범위 + 유형 필터 적용 후
+  // ① 같은 상담원 + 같은 전화번호 → 가장 긴 통화만 남김
+  // ② 통화시간 20분 초과 → 20분으로 캡
+  // → { agentName: { totalSec, capped, calls } }
+  // weekDays: 주간모드 날짜 배열 OR null(기간선택 모드)
+  function calcV2AgentMap(weekDays) {
+    // 1차: 날짜+유형 필터
+    const filtered = rawData.filter(r => {
+      const rDate = r.date.split(' ')[0];
+      if (weekDays) {
+        if (!weekDays.includes(rDate)) return false;
+      } else {
+        // 기간선택 모드
+        if (v2RangeFrom && rDate < v2RangeFrom) return false;
+        if (v2RangeTo   && rDate > v2RangeTo)   return false;
+      }
+      if (v2Type !== 'all' && r.type !== v2Type) return false;
+      return true;
+    });
+
+    // 2차: agent + phone 기준 중복 제거 (가장 긴 통화 유지)
+    // key: agentName + '|' + phone
+    const longestMap = {};
+    filtered.forEach(r => {
+      const phone = r.phone || '__nophone__' + Math.random(); // 번호 없으면 각각 독립
+      const key = r.agent + '|' + phone;
+      if (!longestMap[key] || r.durationSec > longestMap[key].durationSec) {
+        longestMap[key] = r;
+      }
+    });
+
+    // 3차: agent별 합산 + 20분 캡
+    const agentMap = {};
+    Object.values(longestMap).forEach(r => {
+      if (!r.agent) return;
+      if (!agentMap[r.agent]) agentMap[r.agent] = { totalSec: 0, calls: 0, cappedCount: 0 };
+      const sec = Math.min(r.durationSec, CAP_SEC);
+      const wasCapped = r.durationSec > CAP_SEC;
+      agentMap[r.agent].totalSec += sec;
+      agentMap[r.agent].calls++;
+      if (wasCapped) agentMap[r.agent].cappedCount++;
+    });
+
+    return agentMap;
+  }
+
+  // ══════════════════════════════════════════
+  // ── v2 렌더링 ──
+  // ══════════════════════════════════════════
+  function renderV2() {
+    if (rawData.length === 0) {
+      document.getElementById('v2EmptyMsg').style.display = '';
+      document.getElementById('v2WeekNav').style.display = 'none';
+      return;
+    }
+
+    // 주간 기준 초기화
+    if (!v2WeekStart) v2WeekStart = getMonday(new Date());
+
+    let weekDays, periodLabel;
+
+    if (v2Mode === 'week') {
+      weekDays    = getWeekDays(v2WeekStart);
+      const friday = new Date(v2WeekStart); friday.setDate(friday.getDate() + 4);
+      periodLabel = `${v2WeekStart.getFullYear()}년 ${formatDateKR(v2WeekStart)}(월) ~ ${formatDateKR(friday)}(금)`;
+      document.getElementById('v2WeekLabel').textContent = periodLabel;
+    } else {
+      // 기간선택 모드
+      weekDays = null;
+      if (!v2RangeFrom || !v2RangeTo) {
+        // 기본값: 오늘
+        const t = new Date().toISOString().slice(0,10);
+        v2RangeFrom = t; v2RangeTo = t;
+        document.getElementById('v2DateFrom').value = t;
+        document.getElementById('v2DateTo').value   = t;
+      }
+      periodLabel = `${v2RangeFrom} ~ ${v2RangeTo}`;
+    }
+
+    document.getElementById('v2WeekNav').style.display = '';
+    document.getElementById('v2EmptyMsg').style.display = 'none';
+
+    const agentMap = calcV2AgentMap(weekDays);
+
+    // 팀별 카드 렌더링
+    const TEAM_COLORS = { 't2-1':'t2-1','t2-2':'t2-2','t2-3':'t2-3','t3-1':'t3-1','t3-2':'t3-2' };
+    const grid = document.getElementById('v2TeamGrid');
+
+    // 팀 전체 최대값 (바 스케일용)
+    let globalMax = 0;
+    TEAM_CONFIG.forEach(team => {
+      team.members.forEach(name => {
+        const d = agentMap[name];
+        if (d && d.totalSec > globalMax) globalMax = d.totalSec;
+      });
+    });
+    const maxBarW = 80; // px
+
+    grid.innerHTML = TEAM_CONFIG.map(team => {
+      const colorCls = TEAM_COLORS[team.id] || 't2-1';
+      let teamTotalSec = 0;
+      let teamCapped   = 0;
+
+      const rows = team.members.map(name => {
+        const d   = agentMap[name] || { totalSec: 0, calls: 0, cappedCount: 0 };
+        teamTotalSec += d.totalSec;
+        teamCapped   += d.cappedCount;
+        const barW   = globalMax ? Math.max(2, Math.round((d.totalSec / globalMax) * maxBarW)) : 2;
+        const isCap  = d.cappedCount > 0;
+        return `<tr>
+          <td>${name}</td>
+          <td>${d.calls || '-'}</td>
+          <td>
+            <div class="time-bar-wrap">
+              <div class="time-bar${isCap?' capped':''}" style="width:${barW}px"></div>
+              <span style="font-family:monospace;font-size:11px">${d.totalSec ? formatDuration(d.totalSec) : '-'}</span>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+
+      const teamMin = Math.floor(teamTotalSec/60);
+      const teamSec = teamTotalSec % 60;
+      const teamTimeStr = teamTotalSec ? `${teamMin}분 ${teamSec}초` : '-';
+
+      return `<div class="v2-team-card v2-card">
+        <div class="v2-card-title ${colorCls}">
+          <span>${team.name} <span style="font-weight:400;opacity:0.8;font-size:11px">${team.members.length}명</span></span>
+          <span class="team-total-time">${teamTimeStr}</span>
+        </div>
+        <table>
+          <thead><tr>
+            <th style="text-align:left">이름</th>
+            <th>건수</th>
+            <th style="text-align:left">통화시간</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+    }).join('');
+  }
+
+  // ══════════════════════════════════════════
+  // ── v2 PDF ──
+  // ══════════════════════════════════════════
+  function downloadV2PDF() {
+    if (!window.html2canvas) {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      s.onload = generateV2PDF;
+      document.head.appendChild(s);
+    } else { generateV2PDF(); }
+  }
+
+  function generateV2PDF() {
+    if (!window.jspdf) {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      s.onload = generateV2PDF;
+      document.head.appendChild(s);
+      return;
+    }
+
+    let weekDays, weekLabel;
+    if (v2Mode === 'week') {
+      weekDays  = getWeekDays(v2WeekStart);
+      const friday = new Date(v2WeekStart); friday.setDate(friday.getDate() + 4);
+      weekLabel = `${v2WeekStart.getFullYear()}년 ${formatDateKR(v2WeekStart)}(월) ~ ${formatDateKR(friday)}(금)`;
+    } else {
+      weekDays  = null;
+      weekLabel = `${v2RangeFrom} ~ ${v2RangeTo}`;
+    }
+    const agentMap  = calcV2AgentMap(weekDays);
+    const typeLabel = {'all':'전체','in':'인콜','out':'아웃콜'}[v2Type] || '전체';
+    const now = new Date();
+    const stamp = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+    const TEAM_COLORS_HEX = { 't2-1':'#2563eb','t2-2':'#7c3aed','t2-3':'#db2777','t3-1':'#059669','t3-2':'#d97706' };
+    const A4_W = 794;
+
+    let globalMax = 0;
+    TEAM_CONFIG.forEach(team => team.members.forEach(name => {
+      const d = agentMap[name];
+      if (d && d.totalSec > globalMax) globalMax = d.totalSec;
+    }));
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText = `position:fixed;left:-9999px;top:0;width:${A4_W}px;background:#fff;font-family:'Noto Sans KR',sans-serif;padding:24px 24px 16px;box-sizing:border-box;`;
+
+    wrap.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px;border-bottom:2px solid #00a884;padding-bottom:10px;">
+        <div>
+          <div style="font-size:17px;font-weight:700;color:#1a202c;">팀별 통화시간 분석 (v2)</div>
+          <div style="font-size:10px;color:#64748b;margin-top:3px;">${weekLabel} &nbsp;|&nbsp; 유형: ${typeLabel} &nbsp;|&nbsp; 20분 캡 · 중복번호 제거 적용</div>
+        </div>
+        <div style="font-size:10px;color:#94a3b8;">출력: ${stamp}</div>
+      </div>
+      <div id="v2PdfGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;"></div>`;
+
+    document.body.appendChild(wrap);
+    const pdfGrid = wrap.querySelector('#v2PdfGrid');
+
+    TEAM_CONFIG.forEach(team => {
+      const color = TEAM_COLORS_HEX[team.id] || '#00a884';
+      let teamTotal = 0;
+      const memberRows = team.members.map(name => {
+        const d = agentMap[name] || { totalSec:0, calls:0, cappedCount:0 };
+        teamTotal += d.totalSec;
+        const barW   = globalMax ? Math.max(2, Math.round((d.totalSec/globalMax)*70)) : 2;
+        const isCap  = d.cappedCount > 0;
+        const barClr = isCap ? '#ef4444' : '#00a884';
+        return `<tr style="border-bottom:1px solid #f1f5f9;">
+          <td style="padding:5px 8px;font-size:11px;font-weight:600;color:#1a202c;">${name}</td>
+          <td style="padding:5px 6px;font-size:11px;text-align:center;color:#374151;">${d.calls||'-'}</td>
+          <td style="padding:5px 6px;font-size:10px;">
+            <div style="display:flex;align-items:center;gap:4px;">
+              <div style="width:${barW}px;height:4px;border-radius:2px;background:${barClr};flex-shrink:0;"></div>
+              <span style="font-family:monospace;">${d.totalSec?formatDuration(d.totalSec):'-'}</span>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+
+      const card = document.createElement('div');
+      card.style.cssText = 'border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;';
+      card.innerHTML = `
+        <div style="background:${color};color:#fff;padding:8px 12px;font-size:12px;font-weight:700;display:flex;justify-content:space-between;align-items:center;">
+          <span>${team.name}</span>
+          <span style="font-size:10px;font-family:monospace;opacity:0.9;">${teamTotal?formatDuration(teamTotal):'-'}</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;">
+          <thead><tr style="background:#f8fafc;">
+            <th style="padding:5px 8px;font-size:9px;font-weight:700;color:#64748b;text-align:left;border-bottom:1px solid #e2e8f0;">이름</th>
+            <th style="padding:5px 6px;font-size:9px;font-weight:700;color:#64748b;text-align:center;border-bottom:1px solid #e2e8f0;">건수</th>
+            <th style="padding:5px 6px;font-size:9px;font-weight:700;color:#64748b;text-align:left;border-bottom:1px solid #e2e8f0;">통화시간</th>
+          </tr></thead>
+          <tbody>${memberRows}</tbody>
+        </table>`;
+      pdfGrid.appendChild(card);
+    });
+
+    html2canvas(wrap, { scale:1.2, useCORS:true, backgroundColor:'#ffffff', width:A4_W, windowWidth:A4_W }).then(canvas => {
+      document.body.removeChild(wrap);
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+      const pW=210, pH=297, margin=0, maxW=pW-margin*2;
+      const ratio = canvas.width/maxW;
+      const scaledH = canvas.height/ratio;
+      const pageH = pH-margin*2;
+      let offsetMM=0;
+      while (offsetMM<scaledH) {
+        if (offsetMM>0) pdf.addPage();
+        const sliceH=Math.min(pageH,scaledH-offsetMM);
+        const srcY=Math.round(offsetMM*ratio), srcH=Math.round(sliceH*ratio);
+        const tmp=document.createElement('canvas');
+        tmp.width=canvas.width; tmp.height=srcH;
+        tmp.getContext('2d').drawImage(canvas,0,srcY,canvas.width,srcH,0,0,canvas.width,srcH);
+        pdf.addImage(tmp.toDataURL('image/jpeg',0.85),'JPEG',margin,margin,maxW,sliceH);
+        offsetMM+=pageH;
+      }
+      const pdfName = v2Mode === 'week'
+        ? `통화시간분석_v2_${weekDays[0]}_${weekDays[4]}.pdf`
+        : `통화시간분석_v2_${v2RangeFrom}_${v2RangeTo}.pdf`;
+      pdf.save(pdfName);
     });
   }
 </script>
