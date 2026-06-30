@@ -634,6 +634,51 @@
     font-weight: 600;
   }
 
+  /* ── v2 목표 진행률 ── */
+  .goal-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 120px;
+  }
+
+  .goal-bar-track {
+    width: 100%;
+    height: 5px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .goal-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--accent);
+    transition: width 0.4s ease;
+  }
+
+  .goal-bar-fill.over  { background: #059669; }
+  .goal-bar-fill.warn  { background: #f59e0b; }
+  .goal-bar-fill.capped-bar { background: #ef4444; }
+
+  .goal-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text-sub);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .goal-pct {
+    font-weight: 700;
+    font-size: 11px;
+  }
+
+  .goal-pct.over  { color: #059669; }
+  .goal-pct.warn  { color: #f59e0b; }
+  .goal-pct.low   { color: #ef4444; }
+
   /* ── v2 주간 분석 카드 ── */
   .week-nav {
     display: flex;
@@ -2410,6 +2455,23 @@
   // ══════════════════════════════════════════
   const CAP_SEC = 20 * 60; // 20분 캡
 
+  // ── 인원별 일 목표 (분) ──
+  const DAILY_GOAL_MIN = {
+    '김하늘': 60, '정세영': 60, '윤소영': 70, '서진여': 70,
+    '서혜진': 60, '안소은': 70, '김예닮': 70,
+    '최보경': 60, '박소은': 60, '이다연': 70, '차민경': 70,
+    '임현실': 40, '김지혜': 60,
+    '강태욱': 70, '하강우': 70, '오경진': 70, '강민정': 70,
+  };
+
+  // 현재 주간 날짜 배열 기준 영업일 수 계산 → 주간 목표(초) 반환
+  function getWeekGoalSec(name, weekDays) {
+    const dailyMin = DAILY_GOAL_MIN[name];
+    if (!dailyMin || !weekDays) return null;
+    const days = weekDays.length; // 평일 수
+    return dailyMin * days * 60;  // 초
+  }
+
   // rawData → 주어진 날짜 범위 + 유형 필터 적용 후
   // ① 같은 상담원 + 같은 전화번호 → 가장 긴 통화만 남김
   // ② 통화시간 20분 초과 → 20분으로 캡
@@ -2530,20 +2592,47 @@
       let teamCapped   = 0;
 
       const rows = team.members.map(name => {
-        const d   = agentMap[name] || { totalSec: 0, calls: 0, cappedCount: 0 };
-        teamTotalSec += d.totalSec;
-        teamCapped   += d.cappedCount;
-        const barW   = globalMax ? Math.max(2, Math.round((d.totalSec / globalMax) * maxBarW)) : 2;
-        const isCap  = d.cappedCount > 0;
-        return `<tr>
-          <td>${name}</td>
-          <td>${d.calls || '-'}</td>
-          <td>
+        const d        = agentMap[name] || { totalSec: 0, calls: 0, cappedCount: 0 };
+        teamTotalSec  += d.totalSec;
+        teamCapped    += d.cappedCount;
+        const isCap    = d.cappedCount > 0;
+        const goalSec  = getWeekGoalSec(name, weekDays);
+        const hasGoal  = goalSec !== null;
+
+        let timeCell;
+        if (hasGoal) {
+          const pct     = goalSec > 0 ? Math.round((d.totalSec / goalSec) * 100) : 0;
+          const fillW   = Math.min(100, pct);
+          const isOver  = pct >= 100;
+          const isWarn  = pct >= 70 && pct < 100;
+          const fillCls = isOver ? 'over' : (isCap ? 'capped-bar' : (isWarn ? 'warn' : ''));
+          const pctCls  = isOver ? 'over' : (pct < 50 ? 'low' : 'warn');
+          const check   = isOver ? ' ✅' : '';
+          timeCell = `
+            <div class="goal-wrap">
+              <div class="goal-label">
+                <span style="font-family:monospace">${d.totalSec ? formatDuration(d.totalSec) : '-'}</span>
+                <span class="goal-pct ${pctCls}">${d.totalSec ? pct+'%'+check : '-'}</span>
+              </div>
+              <div class="goal-bar-track">
+                <div class="goal-bar-fill ${fillCls}" style="width:${fillW}%"></div>
+              </div>
+              <div style="font-size:9px;color:var(--text-sub);text-align:right">목표 ${formatDuration(goalSec)}</div>
+            </div>`;
+        } else {
+          // 목표 없는 인원: 기존 바 표시
+          const barW = globalMax ? Math.max(2, Math.round((d.totalSec / globalMax) * maxBarW)) : 2;
+          timeCell = `
             <div class="time-bar-wrap">
               <div class="time-bar${isCap?' capped':''}" style="width:${barW}px"></div>
               <span style="font-family:monospace;font-size:11px">${d.totalSec ? formatDuration(d.totalSec) : '-'}</span>
-            </div>
-          </td>
+            </div>`;
+        }
+
+        return `<tr>
+          <td>${name}</td>
+          <td>${d.calls || '-'}</td>
+          <td>${timeCell}</td>
         </tr>`;
       }).join('');
 
@@ -2560,7 +2649,7 @@
           <thead><tr>
             <th style="text-align:left">이름</th>
             <th>건수</th>
-            <th style="text-align:left">통화시간</th>
+            <th style="text-align:left">통화시간 / 목표</th>
           </tr></thead>
           <tbody>${rows}</tbody>
         </table>
@@ -2639,20 +2728,45 @@
       const color = TEAM_COLORS_HEX[team.id] || '#00a884';
       let teamTotal = 0;
       const memberRows = team.members.map(name => {
-        const d = agentMap[name] || { totalSec:0, calls:0, cappedCount:0 };
-        teamTotal += d.totalSec;
-        const barW   = globalMax ? Math.max(2, Math.round((d.totalSec/globalMax)*70)) : 2;
-        const isCap  = d.cappedCount > 0;
-        const barClr = isCap ? '#ef4444' : '#00a884';
+        const d       = agentMap[name] || { totalSec:0, calls:0, cappedCount:0 };
+        teamTotal    += d.totalSec;
+        const isCap   = d.cappedCount > 0;
+        const goalSec = getWeekGoalSec(name, weekDays);
+        const hasGoal = goalSec !== null;
+
+        let timeCell;
+        if (hasGoal && d.totalSec) {
+          const pct    = goalSec > 0 ? Math.round((d.totalSec / goalSec) * 100) : 0;
+          const fillW  = Math.min(100, pct);
+          const isOver = pct >= 100;
+          const barClr = isOver ? '#059669' : (isCap ? '#ef4444' : '#00a884');
+          const pctClr = isOver ? '#059669' : (pct < 50 ? '#ef4444' : '#d97706');
+          const check  = isOver ? ' ✅' : '';
+          timeCell = `<div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="display:flex;justify-content:space-between;font-size:10px;">
+              <span style="font-family:monospace;">${formatDuration(d.totalSec)}</span>
+              <span style="font-weight:700;color:${pctClr}">${pct}%${check}</span>
+            </div>
+            <div style="width:100%;height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden;">
+              <div style="width:${fillW}%;height:100%;background:${barClr};border-radius:2px;"></div>
+            </div>
+            <div style="font-size:9px;color:#94a3b8;text-align:right">목표 ${formatDuration(goalSec)}</div>
+          </div>`;
+        } else if (d.totalSec) {
+          const barW   = globalMax ? Math.max(2, Math.round((d.totalSec/globalMax)*70)) : 2;
+          const barClr = isCap ? '#ef4444' : '#00a884';
+          timeCell = `<div style="display:flex;align-items:center;gap:4px;">
+            <div style="width:${barW}px;height:4px;border-radius:2px;background:${barClr};flex-shrink:0;"></div>
+            <span style="font-family:monospace;font-size:10px;">${formatDuration(d.totalSec)}</span>
+          </div>`;
+        } else {
+          timeCell = `<span style="color:#94a3b8">-</span>`;
+        }
+
         return `<tr style="border-bottom:1px solid #f1f5f9;">
           <td style="padding:5px 8px;font-size:11px;font-weight:600;color:#1a202c;">${name}</td>
           <td style="padding:5px 6px;font-size:11px;text-align:center;color:#374151;">${d.calls||'-'}</td>
-          <td style="padding:5px 6px;font-size:10px;">
-            <div style="display:flex;align-items:center;gap:4px;">
-              <div style="width:${barW}px;height:4px;border-radius:2px;background:${barClr};flex-shrink:0;"></div>
-              <span style="font-family:monospace;">${d.totalSec?formatDuration(d.totalSec):'-'}</span>
-            </div>
-          </td>
+          <td style="padding:5px 6px;font-size:10px;">${timeCell}</td>
         </tr>`;
       }).join('');
 
