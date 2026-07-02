@@ -2571,7 +2571,8 @@
       const longestMap = {};
       filtered.forEach(r => {
         const phone = r.phone || '__nophone__' + Math.random(); // 번호 없으면 각각 독립
-        const key = r.agent + '|' + phone;
+        const date  = r.date.split(' ')[0]; // 날짜별로 구분 (다른 날 같은 번호는 별개)
+        const key   = r.agent + '|' + phone + '|' + date;
         if (!longestMap[key] || r.durationSec > longestMap[key].durationSec) {
           longestMap[key] = r;
         }
